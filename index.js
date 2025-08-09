@@ -8,7 +8,7 @@ const steps = 360;      // Number of steps for a full rotation
 const angleStep = 2 * Math.PI / steps; // Angle increment per frame
 
 
-let radius, maxRadius, minRadius;
+let yinYangRadius, maxRadius, minRadius;
 let isPaused = false;
 let animationTime = 0;
 let animationFrameId = null;
@@ -18,11 +18,11 @@ let animationFrameId = null;
  */
 function resizeCanvas() {
   canvas.width = canvas.height = Math.round(canvas.getBoundingClientRect().width);
-  radius = 0.5 * canvas.width;
-  minRadius = minFactor * 0.5 * radius;
-  maxRadius = radius - minRadius;
+  yinYangRadius = 0.5 * canvas.width;
+  minRadius = minFactor * 0.5 * yinYangRadius;
+  maxRadius = yinYangRadius - minRadius;
   ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform before translating
-  ctx.translate(radius, radius);
+  ctx.translate(yinYangRadius, yinYangRadius);
 }
 
 /**
@@ -33,7 +33,7 @@ function resizeCanvas() {
  */
 function drawYinYang(blend, circle1, circle2) {
   // Clear previous frame
-  ctx.clearRect(-radius, -radius, canvas.width, canvas.width);
+  ctx.clearRect(-yinYangRadius, -yinYangRadius, canvas.width, canvas.width);
   
   // Rotate for animation
   ctx.rotate(angleStep);
@@ -41,7 +41,7 @@ function drawYinYang(blend, circle1, circle2) {
   // Draw black part
   ctx.fillStyle = 'black';
   ctx.beginPath();
-  ctx.arc(0, 0, radius, -Math.PI, 0);
+  ctx.arc(0, 0, yinYangRadius, -Math.PI, 0);
   ctx.arc(circle2, 0, circle1, 0, Math.PI);
   ctx.arc(-circle1, 0, circle2, 0, -Math.PI, true);
   ctx.arc(-circle1, 0, circle2 / 3, 0, 2 * Math.PI);
@@ -69,10 +69,10 @@ function animateYinYang(time = animationTime) {
   animationTime = time;
   // Calculate blend and Yin-Yang radii for morphing effect
   const blend = 0.5 * (1 + Math.cos(time * angleStep));
-  const circle1 = blend * minRadius + (1 - blend) * maxRadius;
-  const circle2 = radius - circle1;
+  const circle1Radius = blend * minRadius + (1 - blend) * maxRadius;
+  const circle2Radius = yinYangRadius - circle1Radius;
 
-  drawYinYang(blend, circle1, circle2);
+  drawYinYang(blend, circle1Radius, circle2Radius);
 
   if (!isPaused) {
     animationFrameId = requestAnimationFrame(() => animateYinYang(time + 0.5));
