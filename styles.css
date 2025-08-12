@@ -1,3 +1,43 @@
+/* Section navigation styles */
+#sections-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.yin-section {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#nav-buttons {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 24px;
+  z-index: 30;
+}
+#nav-buttons button {
+  font-size: 1.2em;
+  padding: 10px 32px;
+  border-radius: 8px;
+  border: none;
+  background: #222;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  transition: background 0.2s;
+}
+#nav-buttons button:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
 /* Dropdown menu styles */
 .menu-wrapper {
   position: relative;

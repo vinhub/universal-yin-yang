@@ -23,9 +23,23 @@
         </div>
       </div>
     </div>
-    <div class="overlay-container">
-      <canvas></canvas>
-      <div id="message-panel" style="display:none;"></div>
+    <div id="sections-container">
+      <section class="yin-section" id="section-0">
+        <div class="overlay-container">
+          <canvas id="canvas-0"></canvas>
+          <div id="message-panel-0" style="display:none;"></div>
+        </div>
+      </section>
+      <section class="yin-section" id="section-1" style="display:none;">
+        <div class="overlay-container">
+          <canvas id="canvas-1"></canvas>
+          <div id="message-panel-1" style="display:none;"></div>
+        </div>
+      </section>
+      <div id="nav-buttons">
+        <button id="prev-btn" disabled>Previous</button>
+        <button id="next-btn">Next</button>
+      </div>
     </div>
     <script src="index.js"></script>
 </body>

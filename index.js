@@ -1,3 +1,122 @@
+// Multi-section navigation logic
+const sections = [
+  {
+    canvasId: 'canvas-0',
+    messagePanelId: 'message-panel-0',
+    draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'black', 'white'),
+    title: 'Classic Yin-Yang'
+  },
+  {
+    canvasId: 'canvas-1',
+    messagePanelId: 'message-panel-1',
+    draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'red', 'blue'),
+    title: 'Political Yin-Yang'
+  }
+];
+
+let currentSection = 0;
+let animationFrameId = null; // Track current animation frame for section
+
+function animateSection(sectionIdx, time = 0) {
+  // Cancel previous animation if running
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId);
+    animationFrameId = null;
+  }
+  const section = sections[sectionIdx];
+  const canvas = document.getElementById(section.canvasId);
+  const ctx = canvas.getContext('2d');
+  const minFactor = 0.5;
+  const steps = 360;
+  const angleStep = 2 * Math.PI / steps;
+  let yinYangRadius;
+  function resizeCanvas() {
+    canvas.width = canvas.height = Math.round(canvas.getBoundingClientRect().width);
+    yinYangRadius = 0.5 * canvas.width;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.translate(yinYangRadius, yinYangRadius);
+  }
+  resizeCanvas();
+  function frame(t) {
+    const blend = 0.5 * (1 + Math.sin(t * angleStep));
+    const minRadius = minFactor * 0.5 * yinYangRadius;
+    const maxRadius = yinYangRadius - minRadius;
+    const circle1Radius = blend * minRadius + (1 - blend) * maxRadius;
+    const circle2Radius = yinYangRadius - circle1Radius;
+    section.draw(blend, circle1Radius, circle2Radius, ctx, yinYangRadius);
+    animationFrameId = requestAnimationFrame(() => frame(t + 0.5));
+  }
+  frame(time);
+  window.addEventListener('resize', resizeCanvas, false);
+}
+
+function showSection(idx) {
+  sections.forEach((_, i) => {
+    document.getElementById('section-' + i).style.display = (i === idx) ? 'flex' : 'none';
+  });
+  document.getElementById('prev-btn').disabled = idx === 0;
+  document.getElementById('next-btn').disabled = idx === sections.length - 1;
+  document.getElementById('page-title').textContent = sections[idx].title;
+  animateSection(idx); // Animate only the current section
+}
+
+document.getElementById('prev-btn').addEventListener('click', () => {
+  if (currentSection > 0) {
+    currentSection--;
+    showSection(currentSection);
+  }
+});
+document.getElementById('next-btn').addEventListener('click', () => {
+  if (currentSection < sections.length - 1) {
+    currentSection++;
+    showSection(currentSection);
+  }
+});
+
+// Parameterized Yin-Yang drawing
+function drawYinYangColors(blend, circle1Radius, circle2Radius, ctx, yinYangRadius, colorA, colorB) {
+  ctx.clearRect(-yinYangRadius, -yinYangRadius, yinYangRadius * 2, yinYangRadius * 2);
+  ctx.save();
+  ctx.rotate(Math.PI / 2);
+  let dot1Radius, dot2Radius;
+  if (circle1Radius <= circle2Radius) {
+    dot2Radius = circle1Radius / 3;
+    const dot1Area = (0.5 * Math.PI * circle2Radius * circle2Radius) + 
+                            (Math.PI * dot2Radius * dot2Radius) -
+                            (0.5 * Math.PI * circle1Radius * circle1Radius)
+    dot1Radius = dot1Area > 0 ? Math.sqrt(dot1Area / Math.PI) : 0;
+  } else {
+    dot1Radius = circle2Radius / 3;
+    const dot2Area = (0.5 * Math.PI * circle1Radius * circle1Radius) + 
+                            (Math.PI * dot1Radius * dot1Radius) -
+                            (0.5 * Math.PI * circle2Radius * circle2Radius);
+    dot2Radius = dot2Area > 0 ? Math.sqrt(dot2Area / Math.PI) : 0;
+  }
+  ctx.fillStyle = colorA;
+  ctx.beginPath();
+  ctx.arc(0, 0, yinYangRadius, 0, Math.PI);
+  ctx.arc(-circle1Radius, 0, circle2Radius, Math.PI, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = colorB;
+  ctx.beginPath();
+  ctx.arc(0, 0, yinYangRadius, -Math.PI, 0);
+  ctx.arc(circle2Radius, 0, circle1Radius, 0, Math.PI);
+  ctx.arc(-circle1Radius, 0, circle2Radius, 0, -Math.PI, true);
+  ctx.arc(-circle1Radius, 0, dot1Radius, 0, 2 * Math.PI);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = colorA;
+  ctx.beginPath();
+  ctx.arc(circle2Radius, 0, dot2Radius, 0, 2 * Math.PI);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+// Initial setup: show first section and animate
+showSection(currentSection);
+
 // Dropdown menu logic
 document.addEventListener('DOMContentLoaded', function() {
   const menuButton = document.getElementById('menu-button');
@@ -40,162 +159,3 @@ function setMessagePanelText(message) {
 }
 
 window.setMessagePanelText = setMessagePanelText;
-
-// Get canvas and context
-const canvas = document.querySelector('canvas');
-const ctx = canvas.getContext('2d');
-
-// Animation and geometry parameters
-const minFactor = 0.5; // Controls minimum size of the morphing heads
-const steps = 360;      // Number of animation steps for a full rotation
-const angleStep = 2 * Math.PI / steps; // Angle increment per animation frame
-
-// Variables for geometry and animation state
-let yinYangRadius, maxRadius, minRadius; // Main circle and morphing head radii
-let isPaused = false;                    // Animation pause state
-let animationTime = 0;                   // Current animation time/frame
-let animationFrameId = null;             // ID for the animation frame (for pausing)
-
-/**
- * Resize the canvas to fit its container and recalculate radii for the Yin-Yang symbol.
- */
-function resizeCanvas() {
-  // Set canvas to be square and match its displayed size
-  canvas.width = canvas.height = Math.round(canvas.getBoundingClientRect().width);
-  // Main radius is half the canvas width
-  yinYangRadius = 0.5 * canvas.width;
-  // Minimum and maximum radii for morphing heads
-  minRadius = minFactor * 0.5 * yinYangRadius;
-  maxRadius = yinYangRadius - minRadius;
-  // Reset any previous transforms and center the drawing context
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.translate(yinYangRadius, yinYangRadius);
-}
-
-/**
- * Draw the Yin-Yang symbol for the current animation state.
- * @param {number} blend - Blend factor for morphing heads (0 to 1)
- * @param {number} circle1Radius - Radius of first morphing head (red)
- * @param {number} circle2Radius - Radius of second morphing head (blue)
- */
-function drawYinYang(blend, circle1Radius, circle2Radius) {
-  // Clear previous frame
-  ctx.clearRect(-yinYangRadius, -yinYangRadius, canvas.width, canvas.width);
-
-  // Rotate the drawing by 90 degrees to make the separation vertical (blue on top, red on bottom)
-  ctx.save();
-  ctx.rotate(Math.PI / 2);
-
-  let dot1Radius, dot2Radius; // Radii for the small dots inside the heads
-  // Calculate dot radii so total red and blue areas remain equal
-  if (circle1Radius <= circle2Radius) {
-    // Fix dot1Radius (red region) and solve for dot2Radius (blue region)
-    dot2Radius = circle1Radius / 3;
-    const dot1Area = (0.5 * Math.PI * circle2Radius * circle2Radius) + 
-                            (Math.PI * dot2Radius * dot2Radius) -
-                            (0.5 * Math.PI * circle1Radius * circle1Radius)
-
-    // Prevent negative radius due to rounding
-    dot1Radius = dot1Area > 0 ? Math.sqrt(dot1Area / Math.PI) : 0;
-  } else {
-    // Fix dot2Radius (blue region) and solve for dot1Radius (red region)
-    dot1Radius = circle2Radius / 3;
-    const dot2Area = (0.5 * Math.PI * circle1Radius * circle1Radius) + 
-                            (Math.PI * dot1Radius * dot1Radius) -
-                            (0.5 * Math.PI * circle2Radius * circle2Radius);
-
-    // Prevent negative radius due to rounding
-    dot2Radius = dot2Area > 0 ? Math.sqrt(dot2Area / Math.PI) : 0;
-  }
-
-  ctx.fillStyle = 'blue';
-  ctx.beginPath();
-  // Small dot inside the blue region (radius is fixed)
-  ctx.arc(0, 0, yinYangRadius, 0, Math.PI);
-  ctx.arc(-circle1Radius, 0, circle2Radius, Math.PI, 0);
-  ctx.closePath();
-  ctx.fill();
-
-  // Draw the red region
-  ctx.fillStyle = 'red';
-  ctx.beginPath();
-  // Main left semicircle
-  ctx.arc(0, 0, yinYangRadius, -Math.PI, 0);
-  // Top morphing head (red)
-  ctx.arc(circle2Radius, 0, circle1Radius, 0, Math.PI);
-  // Lower morphing head (blue)
-  ctx.arc(-circle1Radius, 0, circle2Radius, 0, -Math.PI, true);
-  // Small dot inside the red region (radius is calculated)
-  ctx.arc(-circle1Radius, 0, dot1Radius, 0, 2 * Math.PI);
-  ctx.closePath();
-  ctx.fill();
-
-  // Draw the blue region
-  ctx.fillStyle = 'blue';
-  ctx.beginPath();
-  // Small dot inside the blue region (radius is fixed)
-  ctx.arc(circle2Radius, 0, dot2Radius, 0, 2 * Math.PI);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.restore();
-}
-
-/**
- * Animation loop for the Yin-Yang symbol.
- * @param {number} time - Current animation time/frame
- */
-function animateYinYang(time = animationTime) {
-  animationTime = time; // Store current time for pause/resume
-  // Calculate blend factor for morphing heads (oscillates between 0 and 1)
-  const blend = 0.5 * (1 + Math.sin(time * angleStep));
-  // Calculate radii for morphing heads
-  const circle1Radius = blend * minRadius + (1 - blend) * maxRadius; // red head
-  const circle2Radius = yinYangRadius - circle1Radius;               // blue head
-
-  // Draw the current frame of the Yin-Yang symbol
-  drawYinYang(blend, circle1Radius, circle2Radius);
-
-  // Request the next animation frame unless paused
-  if (!isPaused) {
-    animationFrameId = requestAnimationFrame(() => animateYinYang(time + 0.5));
-  }
-}
-
-/**
- * Toggle pause/resume state of the animation
- */
-function toggleAnimation() {
-  isPaused = !isPaused; // Flip pause state
-  if (!isPaused) {
-    // Resume animation from current frame
-    animateYinYang(animationTime);
-  } else if (animationFrameId) {
-    // Pause animation by cancelling the next frame
-    cancelAnimationFrame(animationFrameId);
-    animationFrameId = null;
-  }
-}
-
-// Initial setup: size canvas and start animation
-resizeCanvas();
-animateYinYang();
-
-// Recalculate geometry and redraw on window resize
-addEventListener('resize', resizeCanvas, false);
-
-// Toggle animation on canvas click (desktop)
-canvas.addEventListener('click', toggleAnimation);
-// Toggle animation on canvas touch (mobile)
-canvas.addEventListener('touchstart', function(e) {
-  toggleAnimation(); // Pause/resume on tap
-  e.preventDefault(); // Prevent scrolling
-}, { passive: false });
-
-// Toggle animation on spacebar press
-window.addEventListener('keydown', function(e) {
-  if (e.code === 'Space') {
-    toggleAnimation(); // Pause/resume on spacebar
-    e.preventDefault(); // Prevent page scroll
-  }
-});
