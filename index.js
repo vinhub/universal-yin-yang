@@ -1,16 +1,25 @@
 // Multi-section navigation logic
 const sections = [
   {
-    canvasId: 'canvas-0',
-    messagePanelId: 'message-panel-0',
-    draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: 'Classic Yin-Yang'
+    canvasId: 'canvas-classic',
+    messagePanelId: 'message-panel-classic',
+    draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white'),
+    title: 'Classic Yin-Yang',
+    animated: false
   },
   {
-    canvasId: 'canvas-1',
-    messagePanelId: 'message-panel-1',
+    canvasId: 'canvas-dynamic',
+    messagePanelId: 'message-panel-dynamic',
+    draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'black', 'white'),
+    title: 'Dynamic Yin-Yang',
+    animated: true
+  },
+  {
+    canvasId: 'canvas-political',
+    messagePanelId: 'message-panel-political',
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'red', 'blue'),
-    title: 'Political Yin-Yang'
+    title: 'Political Yin-Yang',
+    animated: true
   }
 ];
 
@@ -37,6 +46,11 @@ function animateSection(sectionIdx, time = 0) {
     ctx.translate(yinYangRadius, yinYangRadius);
   }
   resizeCanvas();
+  if (!section.animated) {
+    // Draw static Yin-Yang
+    section.draw(0.5, yinYangRadius * 0.75, yinYangRadius * 0.25, ctx, yinYangRadius);
+    return;
+  }
   function frame(t) {
     const blend = 0.5 * (1 + Math.sin(t * angleStep));
     const minRadius = minFactor * 0.5 * yinYangRadius;
