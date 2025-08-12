@@ -3,7 +3,7 @@ const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
 
 // Animation and geometry parameters
-const minFactor = 0.25; // Controls minimum size of the morphing heads
+const minFactor = 0.5; // Controls minimum size of the morphing heads
 const steps = 360;      // Number of animation steps for a full rotation
 const angleStep = 2 * Math.PI / steps; // Angle increment per animation frame
 
@@ -105,7 +105,7 @@ function drawYinYang(blend, circle1Radius, circle2Radius) {
 function animateYinYang(time = animationTime) {
   animationTime = time; // Store current time for pause/resume
   // Calculate blend factor for morphing heads (oscillates between 0 and 1)
-  const blend = 0.5 * (1 + Math.cos(time * angleStep));
+  const blend = 0.5 * (1 + Math.sin(time * angleStep));
   // Calculate radii for morphing heads
   const circle1Radius = blend * minRadius + (1 - blend) * maxRadius; // red head
   const circle2Radius = yinYangRadius - circle1Radius;               // blue head
