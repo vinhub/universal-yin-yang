@@ -28,6 +28,7 @@ const sections = [
 
 let currentSection = 0;
 let animationFrameId = null; // Track current animation frame for section
+let messageTimeoutId = null;
 
 function animateSection(sectionIdx, time = 0) {
   // Cancel previous animation if running
@@ -67,6 +68,16 @@ function animateSection(sectionIdx, time = 0) {
   window.addEventListener('resize', resizeCanvas, false);
 }
 
+// Fade in message panel
+function fadeInMessagePanel(panel) {
+  panel.style.transition = 'opacity 0.5s';
+  panel.style.opacity = '0';
+  panel.style.display = 'block';
+  // Force reflow to apply transition
+  void panel.offsetWidth;
+  panel.style.opacity = '1';
+}
+
 function showSection(idx) {
   sections.forEach((_, i) => {
     document.getElementById('section-' + i).style.display = (i === idx) ? 'flex' : 'none';
@@ -75,16 +86,25 @@ function showSection(idx) {
   document.getElementById('next-btn').disabled = idx === sections.length - 1;
   document.getElementById('page-title').textContent = sections[idx].title;
   animateSection(idx); // Animate only the current section
-  // Show message panel with section message
+  // Show message panel with section message after a delay
   const panel = document.getElementById('message-panel');
-  const msg = sections[idx].message;
-  if (msg) {
-    panel.textContent = msg;
-    panel.style.display = 'block';
-  } else {
-    panel.textContent = '';
-    panel.style.display = 'none';
+  if (messageTimeoutId) {
+    clearTimeout(messageTimeoutId);
+    messageTimeoutId = null;
   }
+  panel.style.display = 'none';
+  panel.style.opacity = '0';
+  messageTimeoutId = setTimeout(() => {
+    const msg = sections[idx].message;
+    if (msg) {
+      panel.textContent = msg;
+      fadeInMessagePanel(panel);
+    } else {
+      panel.textContent = '';
+      panel.style.display = 'none';
+      panel.style.opacity = '0';
+    }
+  }, 2000); // 2000ms delay
 }
 
 document.getElementById('prev-btn').addEventListener('click', () => {
