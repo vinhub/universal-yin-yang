@@ -32,15 +32,15 @@ function resizeCanvas() {
 /**
  * Draw the Yin-Yang symbol for the current animation state.
  * @param {number} blend - Blend factor for morphing heads (0 to 1)
- * @param {number} circle1 - Radius of first morphing head (black)
- * @param {number} circle2 - Radius of second morphing head (white)
+ * @param {number} circle1Radius - Radius of first morphing head (black)
+ * @param {number} circle2Radius - Radius of second morphing head (white)
  */
-function drawYinYang(blend, circle1, circle2) {
+function drawYinYang(blend, circle1Radius, circle2Radius) {
   // Clear previous frame
   ctx.clearRect(-yinYangRadius, -yinYangRadius, canvas.width, canvas.width);
 
   // Rotate the entire drawing for animation effect
-  ctx.rotate(angleStep);
+  //ctx.rotate(angleStep);
 
   // Draw the black region (left side)
   ctx.fillStyle = 'black';
@@ -48,10 +48,10 @@ function drawYinYang(blend, circle1, circle2) {
   // Main left semicircle
   ctx.arc(0, 0, yinYangRadius, -Math.PI, 0);
   // Top morphing head (black)
-  ctx.arc(circle2, 0, circle1, 0, Math.PI);
+  ctx.arc(circle2Radius, 0, circle1Radius, 0, Math.PI);
   // Lower morphing head (white)
-  ctx.arc(-circle1, 0, circle2, 0, -Math.PI, true);
-  ctx.arc(-circle1, 0, circle2 / 3, 0, 2 * Math.PI);
+  ctx.arc(-circle1Radius, 0, circle2Radius, 0, -Math.PI, true);
+  ctx.arc(-circle1Radius, 0, circle2Radius / 3, 0, 2 * Math.PI);
   ctx.closePath();
   ctx.fill();
 
@@ -59,7 +59,7 @@ function drawYinYang(blend, circle1, circle2) {
   ctx.fillStyle = 'white';
   ctx.beginPath();
   // Small dot inside the white region
-  ctx.arc(circle2, 0, circle1 / 3, 0, 2 * Math.PI);
+  ctx.arc(circle2Radius, 0, circle1Radius / 3, 0, 2 * Math.PI);
   ctx.closePath();
   ctx.fill();
 }
@@ -99,8 +99,6 @@ function toggleAnimation() {
     animationFrameId = null;
   }
 }
-
-
 
 // Initial setup: size canvas and start animation
 resizeCanvas();
