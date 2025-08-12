@@ -33,6 +33,7 @@
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0,0,0,0.12);
   transition: background 0.2s;
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
 }
 #nav-buttons button:disabled {
   background: #aaa;
@@ -68,6 +69,7 @@
   padding: 12px 24px;
   cursor: pointer;
   transition: background 0.2s;
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
 }
 .dropdown-item:hover {
   background: rgba(255,255,255,0.1);
@@ -87,12 +89,15 @@
   top: 0;
   left: 0;
   z-index: 20;
+ font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
 }
 
 #page-title {
   font-size: 2em;
   font-weight: bold;
   letter-spacing: 1px;
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
 }
 
 /* Menu button styles */
@@ -162,6 +167,7 @@
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.5s;
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
 }
 
 @media (max-width: 600px) {
