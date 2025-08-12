@@ -32,20 +32,21 @@ function resizeCanvas() {
 /**
  * Draw the Yin-Yang symbol for the current animation state.
  * @param {number} blend - Blend factor for morphing heads (0 to 1)
- * @param {number} circle1Radius - Radius of first morphing head (black)
- * @param {number} circle2Radius - Radius of second morphing head (white)
+ * @param {number} circle1Radius - Radius of first morphing head (red)
+ * @param {number} circle2Radius - Radius of second morphing head (blue)
  */
 function drawYinYang(blend, circle1Radius, circle2Radius) {
   // Clear previous frame
   ctx.clearRect(-yinYangRadius, -yinYangRadius, canvas.width, canvas.width);
 
-  // Rotate the entire drawing for animation effect
-  //ctx.rotate(angleStep);
+  // Rotate the drawing by 90 degrees to make the separation vertical (blue on top, red on bottom)
+  ctx.save();
+  ctx.rotate(Math.PI / 2);
 
   let dot1Radius, dot2Radius; // Radii for the small dots inside the heads
-  // Calculate dot radii so total black and white areas remain equal
+  // Calculate dot radii so total red and blue areas remain equal
   if (circle1Radius <= circle2Radius) {
-    // Fix dot1Radius (black region) and solve for dot2Radius (white region)
+    // Fix dot1Radius (red region) and solve for dot2Radius (blue region)
     dot2Radius = circle1Radius / 3;
     const dot1Area = (0.5 * Math.PI * circle2Radius * circle2Radius) + 
                             (Math.PI * dot2Radius * dot2Radius) -
@@ -54,7 +55,7 @@ function drawYinYang(blend, circle1Radius, circle2Radius) {
     // Prevent negative radius due to rounding
     dot1Radius = dot1Area > 0 ? Math.sqrt(dot1Area / Math.PI) : 0;
   } else {
-    // Fix dot2Radius (white region) and solve for dot1Radius (black region)
+    // Fix dot2Radius (blue region) and solve for dot1Radius (red region)
     dot1Radius = circle2Radius / 3;
     const dot2Area = (0.5 * Math.PI * circle1Radius * circle1Radius) + 
                             (Math.PI * dot1Radius * dot1Radius) -
@@ -64,27 +65,37 @@ function drawYinYang(blend, circle1Radius, circle2Radius) {
     dot2Radius = dot2Area > 0 ? Math.sqrt(dot2Area / Math.PI) : 0;
   }
 
-  // Draw the black region (left side)
-  ctx.fillStyle = 'black';
+  ctx.fillStyle = 'blue';
+  ctx.beginPath();
+  // Small dot inside the blue region (radius is fixed)
+  ctx.arc(0, 0, yinYangRadius, 0, Math.PI);
+  ctx.arc(-circle1Radius, 0, circle2Radius, Math.PI, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  // Draw the red region
+  ctx.fillStyle = 'red';
   ctx.beginPath();
   // Main left semicircle
   ctx.arc(0, 0, yinYangRadius, -Math.PI, 0);
-  // Top morphing head (black)
+  // Top morphing head (red)
   ctx.arc(circle2Radius, 0, circle1Radius, 0, Math.PI);
-  // Lower morphing head (white)
+  // Lower morphing head (blue)
   ctx.arc(-circle1Radius, 0, circle2Radius, 0, -Math.PI, true);
-  // Small dot inside the black region (radius is calculated)
+  // Small dot inside the red region (radius is calculated)
   ctx.arc(-circle1Radius, 0, dot1Radius, 0, 2 * Math.PI);
   ctx.closePath();
   ctx.fill();
 
-  // Draw the white region (right side)
-  ctx.fillStyle = 'white';
+  // Draw the blue region
+  ctx.fillStyle = 'blue';
   ctx.beginPath();
-  // Small dot inside the white region (radius is fixed)
+  // Small dot inside the blue region (radius is fixed)
   ctx.arc(circle2Radius, 0, dot2Radius, 0, 2 * Math.PI);
   ctx.closePath();
   ctx.fill();
+
+  ctx.restore();
 }
 
 /**
@@ -96,8 +107,8 @@ function animateYinYang(time = animationTime) {
   // Calculate blend factor for morphing heads (oscillates between 0 and 1)
   const blend = 0.5 * (1 + Math.cos(time * angleStep));
   // Calculate radii for morphing heads
-  const circle1Radius = blend * minRadius + (1 - blend) * maxRadius; // Black head
-  const circle2Radius = yinYangRadius - circle1Radius;               // White head
+  const circle1Radius = blend * minRadius + (1 - blend) * maxRadius; // red head
+  const circle2Radius = yinYangRadius - circle1Radius;               // blue head
 
   // Draw the current frame of the Yin-Yang symbol
   drawYinYang(blend, circle1Radius, circle2Radius);
