@@ -6,6 +6,23 @@
     <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+    <div id="title-bar">
+      <span id="page-title">Universal Yin-Yang</span>
+      <div class="menu-wrapper">
+        <button id="menu-button" aria-label="Menu">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect y="7" width="32" height="4" rx="2" fill="#fff"/>
+            <rect y="14" width="32" height="4" rx="2" fill="#fff"/>
+            <rect y="21" width="32" height="4" rx="2" fill="#fff"/>
+          </svg>
+        </button>
+        <div id="dropdown-menu" class="dropdown-menu">
+          <div class="dropdown-item">Menu Item 1</div>
+          <div class="dropdown-item">Menu Item 2</div>
+          <div class="dropdown-item">Menu Item 3</div>
+        </div>
+      </div>
+    </div>
     <div class="overlay-container">
       <canvas></canvas>
       <div id="message-panel"></div>

@@ -1,3 +1,30 @@
+// Dropdown menu logic
+document.addEventListener('DOMContentLoaded', function() {
+  const menuButton = document.getElementById('menu-button');
+  const dropdownMenu = document.getElementById('dropdown-menu');
+
+  function closeMenu() {
+    dropdownMenu.classList.remove('open');
+  }
+
+  menuButton.addEventListener('click', function(e) {
+    e.stopPropagation();
+    dropdownMenu.classList.toggle('open');
+  });
+
+  document.addEventListener('click', function(e) {
+    if (dropdownMenu.classList.contains('open')) {
+      closeMenu();
+    }
+  });
+
+  dropdownMenu.addEventListener('click', function(e) {
+    e.stopPropagation(); // Prevent closing when clicking inside menu
+    if (e.target.classList.contains('dropdown-item')) {
+      closeMenu();
+    }
+  });
+});
 // Set the text of the message panel (does not change visibility)
 function setMessagePanelText(message) {
   const panel = document.getElementById('message-panel');
