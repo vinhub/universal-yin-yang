@@ -1,3 +1,38 @@
+/* Overlay container for canvas and message panel */
+.overlay-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Centered translucent message panel */
+#message-panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  padding: 16px 32px;
+  border-radius: 12px;
+  font-size: 2em;
+  box-sizing: border-box;
+  max-width: 90vw;
+  text-align: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+@media (max-width: 600px) {
+  #message-panel {
+	font-size: 2.5em;
+	padding: 12px 8px;
+	max-width: 98vw;
+  }
+}
 body {
 	display: flex;
 	justify-content: center;

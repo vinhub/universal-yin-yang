@@ -1,3 +1,33 @@
+// Set the text of the message panel (does not change visibility)
+function setMessagePanelText(message) {
+  const panel = document.getElementById('message-panel');
+  if (panel) {
+    panel.textContent = message;
+  }
+}
+
+window.setMessagePanelText = setMessagePanelText;
+
+// Show the message panel with a given message
+function showMessagePanel(message) {
+  const panel = document.getElementById('message-panel');
+  if (panel) {
+    panel.textContent = message;
+    panel.style.display = 'block';
+  }
+}
+
+// Hide the message panel
+function hideMessagePanel() {
+  const panel = document.getElementById('message-panel');
+  if (panel) {
+    panel.style.display = 'none';
+  }
+}
+
+// Optionally expose these methods globally for easy use in console or other scripts
+window.showMessagePanel = showMessagePanel;
+window.hideMessagePanel = hideMessagePanel;
 // Get canvas and context
 const canvas = document.querySelector('canvas');
 const ctx = canvas.getContext('2d');
