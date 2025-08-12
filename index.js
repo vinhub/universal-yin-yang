@@ -5,21 +5,24 @@ const sections = [
     messagePanelId: 'message-panel-classic',
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white'),
     title: 'Classic Yin-Yang',
-    animated: false
+    animated: false,
+    message: "This is the classic static Yin-Yang symbol."
   },
   {
     canvasId: 'canvas-dynamic',
     messagePanelId: 'message-panel-dynamic',
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'black', 'white'),
     title: 'Dynamic Yin-Yang',
-    animated: true
+    animated: true,
+    message: "This is the dynamic animated Yin-Yang."
   },
   {
     canvasId: 'canvas-political',
     messagePanelId: 'message-panel-political',
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'red', 'blue'),
     title: 'Political Yin-Yang',
-    animated: true
+    animated: true,
+    message: "This is the political red/blue Yin-Yang."
   }
 ];
 
@@ -72,6 +75,16 @@ function showSection(idx) {
   document.getElementById('next-btn').disabled = idx === sections.length - 1;
   document.getElementById('page-title').textContent = sections[idx].title;
   animateSection(idx); // Animate only the current section
+  // Show message panel with section message
+  const panel = document.getElementById('message-panel');
+  const msg = sections[idx].message;
+  if (msg) {
+    panel.textContent = msg;
+    panel.style.display = 'block';
+  } else {
+    panel.textContent = '';
+    panel.style.display = 'none';
+  }
 }
 
 document.getElementById('prev-btn').addEventListener('click', () => {
