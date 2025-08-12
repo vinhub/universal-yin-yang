@@ -135,7 +135,7 @@ body {
   align-items: center;
   overflow: hidden;
   height: 100vh;
-  background: lightslategray;
+  background: #f8f8f5;
 }
 
 canvas {
