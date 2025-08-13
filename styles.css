@@ -1,35 +1,6 @@
-@media (max-aspect-ratio: 1/1) {
-  .yin-message-container {
-    flex-direction: column;
-    gap: 2vw;
-    height: auto;
-    align-items: center;
-    justify-content: center;
-  }
-  #message-panel, canvas {
-    width: 100%;
-    height: auto;
-    min-width: unset;
-    max-width: unset;
-    align-items: center;
-    justify-content: center;
-  }  
-  #message-panel {
-    font-size: 2em;
-    width: 98vw;
-    height: auto;
-    min-width: unset;
-    max-width: unset;
-    text-align: center;
-    align-items: flex-start;
-    justify-content: flex-start;
-  }
-}
-
 /* Fluid container for Yin-Yang and message panel */
 .yin-message-container {
   display: flex;
-  flex-direction: row;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
@@ -41,7 +12,7 @@
   position: static;
   background: none;
   color: #222;
-  padding: 10px;
+  padding: 0px;
   border-radius: 0;
   font-size: 1.3em;
   box-sizing: border-box;
@@ -55,6 +26,20 @@
   font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
   align-self: center;
   order: 2;
+}
+@media (max-aspect-ratio: 1/1) {
+  .yin-message-container {
+    gap: 10vw;
+  }
+  #message-panel {
+    font-size: 2.4em;
+    width: 95vw;
+    min-width: unset;
+    max-width: unset;
+    text-align: center;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
 }
 
 /* Section navigation styles */
@@ -73,6 +58,7 @@
   align-items: center;
   justify-content: center;
 }
+
 #nav-buttons {
   position: absolute;
   bottom: 32px;
@@ -98,6 +84,17 @@
   background: #aaa;
   cursor: not-allowed;
 }
+@media (max-width: 600px) {
+  #nav-buttons {
+    bottom: 16px;
+    gap: 16px;
+  }
+  #nav-buttons button {
+    padding: 8px 24px;
+    font-size: 1em;
+  } 
+}
+
 /* Dropdown menu styles */
 .menu-wrapper {
   position: relative;

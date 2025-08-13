@@ -75,12 +75,9 @@ function animateSection(sectionIdx, time = 0) {
 
 // Fade in message panel
 function fadeInMessagePanel(panel) {
-  panel.style.transition = 'opacity 0.5s';
-  panel.style.opacity = '0';
   panel.style.display = 'block';
   // Force reflow to apply transition
   void panel.offsetWidth;
-  panel.style.opacity = '1';
 }
 
 function showSection(idx) {
@@ -99,7 +96,6 @@ function showSection(idx) {
   }
   const msg = sections[idx].message;
   panel.style.display = 'block';
-  panel.style.opacity = '0';
   panel.innerHTML = msg ? msg : '';
   fadeInMessagePanel(panel);
 }
