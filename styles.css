@@ -14,7 +14,7 @@
   color: #222;
   padding: 0px;
   border-radius: 0;
-  font-size: 1.3em;
+  font-size: 1.2em;
   box-sizing: border-box;
   width: 65vmin;
   height: auto;
@@ -32,7 +32,7 @@
     gap: 10vw;
   }
   #message-panel {
-    font-size: 2.4em;
+    font-size: 1em;
     width: 95vw;
     min-width: unset;
     max-width: unset;
@@ -138,7 +138,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
+  height: 40px;
   padding: 0 24px;
   box-sizing: border-box;
   position: absolute;
@@ -149,11 +149,11 @@
 }
 
 #page-title {
-  font-size: 2em;
+  font-size: 1.2em;
   font-weight: bold;
   letter-spacing: 1px;
   font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
-  font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
+  align-self: center;
 }
 
 /* Menu button styles */
@@ -170,12 +170,12 @@
 
 #menu-button svg {
   display: block;
+  width: 24px;
+  height: 24px;
 }
 
 @media (max-width: 600px) {
   #title-bar {
-    height: 72px;
-    flex-direction: column;
     align-items: stretch;
     padding: 0 12px;
   }
@@ -183,16 +183,11 @@
     top: 72px;
   }
   #page-title {
-    font-size: 1.3em;
-    margin-bottom: 8px;
+    font-size: 1.2em;
   }
   #menu-button {
     margin-left: 0;
     margin-top: 8px;
-  }
-  #menu-button svg {
-    width: 36px;
-    height: 36px;
   }
 }
 
