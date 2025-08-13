@@ -4,15 +4,20 @@ const sections = [
     canvasId: 'canvas-classic',
     messagePanelId: 'message-panel-classic',
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white'),
-    title: 'Classic Yin-Yang',
+    title: 'The Yin-Yang Model of Reality',
     animated: false,
-    message: "This is the classic static Yin-Yang symbol."
+    message: "The Yin-Yang represents the duality in nature — how seemingly opposite forces are " +
+             "interconnected and interdependent. It illustrates that various aspects of reality such as light and dark, " +
+             "male and female, order and chaos, etc. are not just opposites, but complementary, " +
+             "each containing a seed of the other, and together creating balance and harmony." +
+             "Going deeper into into this concept reveals some interesting insights. <br/>" +
+             "Click on the Next button to continue."
   },
   {
     canvasId: 'canvas-dynamic',
     messagePanelId: 'message-panel-dynamic',
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: 'Dynamic Yin-Yang',
+    title: 'Dynamic Nature of the Yin-Yang',
     animated: true,
     message: "This is the dynamic animated Yin-Yang."
   },
@@ -20,7 +25,7 @@ const sections = [
     canvasId: 'canvas-political',
     messagePanelId: 'message-panel-political',
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'red', 'blue'),
-    title: 'Political Yin-Yang',
+    title: 'The Yin-Yang of Politics',
     animated: true,
     message: "This is the political red/blue Yin-Yang."
   }
@@ -97,10 +102,10 @@ function showSection(idx) {
   messageTimeoutId = setTimeout(() => {
     const msg = sections[idx].message;
     if (msg) {
-      panel.textContent = msg;
+      panel.innerHTML = msg;
       fadeInMessagePanel(panel);
     } else {
-      panel.textContent = '';
+      panel.innerHTML = null;
       panel.style.display = 'none';
       panel.style.opacity = '0';
     }
