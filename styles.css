@@ -1,3 +1,32 @@
+@media (max-aspect-ratio: 1/1) {
+  .yin-message-container {
+    flex-direction: column;
+    gap: 2vw;
+    height: auto;
+    align-items: center;
+    justify-content: center;
+  }
+  #message-panel, canvas {
+    width: 100%;
+    height: auto;
+    min-width: unset;
+    max-width: unset;
+    align-items: center;
+    justify-content: center;
+  }
+}
+/* Fluid container for Yin-Yang and message panel */
+.yin-message-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 3vw;
+  width: 100vw;
+  height: auto;
+}
+
 /* Section navigation styles */
 #sections-container {
   width: 100vw;
@@ -139,42 +168,43 @@
     height: 36px;
   }
 }
-/* Overlay container for canvas and message panel */
-.overlay-container {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100vw;
-  height: 100vh;
-}
 
 /* Centered translucent message panel */
 #message-panel {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0,0,0,0.5);
-  color: #fff;
-  padding: 16px 32px;
-  border-radius: 12px;
+  position: static;
+  background: none;
+  color: #222;
+  padding: 0;
+  border-radius: 0;
   font-size: 2em;
   box-sizing: border-box;
-  max-width: 90vw;
-  text-align: center;
+  min-width: 0;
+  max-width: none;
+  width: 65vmin;
+  height: 65vmin;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: left;
   z-index: 10;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.5s;
   font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
+  align-self: center;
+  order: 2;
 }
 
 @media (max-width: 600px) {
   #message-panel {
-  font-size: 2.5em;
-  padding: 12px 8px;
-  max-width: 98vw;
+    font-size: 1.3em;
+    padding: 0;
+    width: 98vw;
+    height: auto;
+    min-width: unset;
+    text-align: center;
+    align-items: flex-start;
+    justify-content: flex-start;
   }
 }
 body {
@@ -190,4 +220,5 @@ canvas {
   width: 65vmin; height: 65vmin;
   border-radius: 50%;
   background: white;
+  order: 1;
 }

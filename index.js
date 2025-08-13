@@ -91,25 +91,17 @@ function showSection(idx) {
   document.getElementById('next-btn').disabled = idx === sections.length - 1;
   document.getElementById('page-title').textContent = sections[idx].title;
   animateSection(idx); // Animate only the current section
-  // Show message panel with section message after a delay
-  const panel = document.getElementById('message-panel');
+  // Show message panel with section message immediately
+  const panel = document.querySelector(`#section-${idx} .yin-message-container #message-panel`);
   if (messageTimeoutId) {
     clearTimeout(messageTimeoutId);
     messageTimeoutId = null;
   }
-  panel.style.display = 'none';
+  const msg = sections[idx].message;
+  panel.style.display = 'block';
   panel.style.opacity = '0';
-  messageTimeoutId = setTimeout(() => {
-    const msg = sections[idx].message;
-    if (msg) {
-      panel.innerHTML = msg;
-      fadeInMessagePanel(panel);
-    } else {
-      panel.innerHTML = null;
-      panel.style.display = 'none';
-      panel.style.opacity = '0';
-    }
-  }, 2000); // 2000ms delay
+  panel.innerHTML = msg ? msg : '';
+  fadeInMessagePanel(panel);
 }
 
 document.getElementById('prev-btn').addEventListener('click', () => {
