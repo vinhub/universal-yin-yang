@@ -17,7 +17,7 @@ const sections = [
     canvasId: 'canvas-dynamic',
     messagePanelId: 'message-panel-dynamic',
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: 'Dynamic Nature of the Yin-Yang',
+    title: 'The Yin-Yang is Dynamic',
     animated: true,
     message: "This is the dynamic animated Yin-Yang."
   },

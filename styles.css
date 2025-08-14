@@ -87,7 +87,10 @@
   transition: box-shadow 0.2s, background 0.2s;
 }
 #nav-buttons button:disabled {
-  background: #aaa;
+  background: #e5e5e5;
+  color: #b8b8b8;
+  border: 2px solid #cccccc;
+  box-shadow: none;
   cursor: not-allowed;
 }
 @media (max-width: 600px) {
@@ -156,7 +159,7 @@
   top: 0;
   left: 0;
   z-index: 20;
- font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
 }
 
 #page-title {
@@ -164,8 +167,9 @@
   font-weight: bold;
   letter-spacing: 1.2px;
   font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
-  color: #ff8c42;
+  color: #c75a0a;
   text-shadow: 0 2px 8px rgba(255, 140, 66, 0.08);
+  align-self: center;
 }
 
 /* Menu button styles */
