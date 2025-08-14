@@ -152,8 +152,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 40px;
-  padding: 0 24px;
+  height: 48px;
+  padding: 8px 24px 0px 24px;
   box-sizing: border-box;
   position: absolute;
   top: 0;
@@ -188,13 +188,19 @@
   display: block;
   width: 24px;
   height: 24px;
+  /* Match title color */
+  color: #c75a0a;
+}
+
+#menu-button svg rect {
+  fill: currentColor;
 }
 
 @media (max-width: 600px) {
   #title-bar {
     align-items: stretch;
-    padding: 0 12px;
-  }
+    padding: 8px 12px 0px 12px;
+    height: 52px;}
   .dropdown-menu {
     top: 72px;
   }
