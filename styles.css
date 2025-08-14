@@ -101,7 +101,7 @@
     align-items: center;
     width: 100vw;
     height: 100vh;
-    gap: 0;
+    gap: 10vw;
   }
   canvas {
     width: min(90vw, 60vh);
