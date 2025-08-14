@@ -83,9 +83,9 @@ function fadeInMessagePanel(panel) {
 function showSection(idx) {
   sections.forEach((_, i) => {
     document.getElementById('section-' + i).style.display = (i === idx) ? 'flex' : 'none';
+    document.getElementById(`arrow-left-${i}`).disabled = (idx === 0);
+    document.getElementById(`arrow-right-${i}`).disabled = (idx === sections.length - 1);
   });
-  document.getElementById('prev-btn').disabled = idx === 0;
-  document.getElementById('next-btn').disabled = idx === sections.length - 1;
   document.getElementById('page-title').textContent = sections[idx].title;
   animateSection(idx); // Animate only the current section
   // Show message panel with section message immediately
@@ -100,18 +100,14 @@ function showSection(idx) {
   fadeInMessagePanel(panel);
 }
 
-document.getElementById('prev-btn').addEventListener('click', () => {
-  if (currentSection > 0) {
-    currentSection--;
-    showSection(currentSection);
-  }
-});
-document.getElementById('next-btn').addEventListener('click', () => {
-  if (currentSection < sections.length - 1) {
-    currentSection++;
-    showSection(currentSection);
-  }
-});
+for (let i = 0; i < sections.length; i++) {
+  document.getElementById(`arrow-left-${i}`).addEventListener('click', () => {
+    if (currentSection > 0) showSection(--currentSection);
+  });
+  document.getElementById(`arrow-right-${i}`).addEventListener('click', () => {
+    if (currentSection < sections.length - 1) showSection(++currentSection);
+  });
+}
 
 // Parameterized Yin-Yang drawing
 function drawYinYangColors(blend, circle1Radius, circle2Radius, ctx, yinYangRadius, colorA, colorB) {
