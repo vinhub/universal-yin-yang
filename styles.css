@@ -4,7 +4,6 @@
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 3vw;
   width: 100vw;
   height: auto;
 }
@@ -14,6 +13,7 @@
   justify-content: center;
   align-items: center;
   order: 1;
+  margin: 12px;
 }
 canvas {
   width: 65vmin;
@@ -46,9 +46,6 @@ canvas {
   order: 2;
 }
 @media (max-aspect-ratio: 1/1) {
-  .yin-message-container {
-    gap: 10vw;
-  }
   #message-panel {
     font-size: 1em;
     width: 95vw;
@@ -62,8 +59,8 @@ canvas {
 
 /* Section navigation styles */
 #sections-container {
-  position:absolute;
-  top: 58px;
+  position: absolute;
+  top: 48px;
   width: 100vw;
   height: 100vh;
   display: flex;
@@ -75,7 +72,7 @@ canvas {
   width: 100vw;
   height: 100vh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
 }
 
@@ -121,11 +118,11 @@ canvas {
     align-items: center;
     width: 100vw;
     height: 100vh;
-    gap: 10vw;
   }
   canvas {
     width: min(90vw, 60vh);
     height: min(90vw, 60vh);
+    margin-top: 56px;
     aspect-ratio: 1 / 1;
     max-width: 220px;
     max-height: 220px;
@@ -133,20 +130,6 @@ canvas {
     min-height: 120px;
     flex-shrink: 0;
     display: block;
-  }
-  #message-panel {
-    position: relative;
-    width: 100vw;
-    height: calc(100vh - 56px - 32vh);
-    min-height: 80px;
-    max-height: 300px;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    text-align: left;
-    overflow-y: auto;
-    font-size: 1em;
-    padding: 0 12px;
   }
   #nav-buttons {
     bottom: 16px;
@@ -207,7 +190,7 @@ canvas {
   align-items: center;
   justify-content: space-between;
   height: 48px;
-  padding: 0px 12px 0px 12px;
+  padding: 12px 12px 0px 12px;
   box-sizing: border-box;
   position: absolute;
   top: 0;
