@@ -62,6 +62,8 @@ canvas {
 
 /* Section navigation styles */
 #sections-container {
+  position:absolute;
+  top: 58px;
   width: 100vw;
   height: 100vh;
   display: flex;
@@ -129,8 +131,6 @@ canvas {
     max-height: 220px;
     min-width: 120px;
     min-height: 120px;
-    margin-top: 56px !important; /* Height of title bar */
-    margin-bottom: 2.5vh !important;
     flex-shrink: 0;
     display: block;
   }
