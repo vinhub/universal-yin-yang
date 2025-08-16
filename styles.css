@@ -1,7 +1,7 @@
 /* Fluid container for Yin-Yang and message panel */
 .yin-message-container {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction:row;
   justify-content: center;
   align-items: center;
   width: 100vw;
@@ -45,17 +45,6 @@ canvas {
   align-self: center;
   order: 2;
 }
-@media (max-aspect-ratio: 1/1) {
-  #message-panel {
-    font-size: 1em;
-    width: 95vw;
-    min-width: unset;
-    max-width: unset;
-    text-align: center;
-    align-items: flex-start;
-    justify-content: flex-start;
-  }
-}
 
 /* Section navigation styles */
 #sections-container {
@@ -81,7 +70,6 @@ canvas {
   bottom: 32px;
   display: flex;
   gap: 24px;
-  z-index: 30;
 }
 #nav-buttons button {
   font-size: 1.2em;
@@ -139,6 +127,15 @@ canvas {
     padding: 8px 24px;
     font-size: 1em;
   } 
+  #message-panel {
+    font-size: 1em;
+    width: 95vw;
+    min-width: unset;
+    max-width: unset;
+    text-align: left;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
 }
 
 /* Dropdown menu styles */
@@ -190,12 +187,11 @@ canvas {
   align-items: center;
   justify-content: space-between;
   height: 48px;
-  padding: 12px 12px 0px 12px;
+  padding: 0px 12px 0px 12px;
   box-sizing: border-box;
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 20;
   font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
 }
 
@@ -274,7 +270,6 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 10;
   transition: box-shadow 0.2s, background 0.2s, opacity 0.2s;
   margin: 0 2vw;
   opacity: 1;
