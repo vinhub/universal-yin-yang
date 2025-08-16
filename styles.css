@@ -283,9 +283,16 @@ body {
   order: 3;
 }
 .yin-arrow:disabled {
-  opacity: 0.5;
+  opacity: 0.55;
+  background: #ededed;
+  border-color: #dddddd;
+  color: #b8b8b8;
+  box-shadow: none;
   cursor: not-allowed;
   pointer-events: none;
+}
+.yin-arrow:disabled svg {
+  fill: #b8b8b8;
 }
 .yin-arrow svg {
   width: 24px;
