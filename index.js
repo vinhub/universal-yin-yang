@@ -2,7 +2,6 @@
 const sections = [
   {
     canvasId: 'canvas-classic',
-    messagePanelId: 'message-panel-classic',
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white'),
     title: 'The Yin-Yang Model of Reality',
     animated: false,
@@ -15,7 +14,6 @@ const sections = [
   },
   {
     canvasId: 'canvas-dynamic',
-    messagePanelId: 'message-panel-dynamic',
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'black', 'white'),
     title: 'The Yin-Yang is Dynamic',
     animated: true,
@@ -23,7 +21,6 @@ const sections = [
   },
   {
     canvasId: 'canvas-political',
-    messagePanelId: 'message-panel-political',
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'red', 'blue'),
     title: 'The Yin-Yang of Politics',
     animated: true,
@@ -33,7 +30,6 @@ const sections = [
 
 let currentSection = 0;
 let animationFrameId = null; // Track current animation frame for section
-let messageTimeoutId = null;
 
 function animateSection(sectionIdx, time = 0) {
   // Cancel previous animation if running
@@ -73,13 +69,6 @@ function animateSection(sectionIdx, time = 0) {
   window.addEventListener('resize', resizeCanvas, false);
 }
 
-// Fade in message panel
-function fadeInMessagePanel(panel) {
-  panel.style.display = 'block';
-  // Force reflow to apply transition
-  void panel.offsetWidth;
-}
-
 function showSection(idx) {
   sections.forEach((_, i) => {
     document.getElementById('section-' + i).style.display = (i === idx) ? 'flex' : 'none';
@@ -89,15 +78,9 @@ function showSection(idx) {
   document.getElementById('page-title').textContent = sections[idx].title;
   animateSection(idx); // Animate only the current section
   // Show message panel with section message immediately
-  const panel = document.querySelector(`#section-${idx} .yin-message-container #message-panel`);
-  if (messageTimeoutId) {
-    clearTimeout(messageTimeoutId);
-    messageTimeoutId = null;
-  }
+  const panel = document.getElementById('message-panel');
   const msg = sections[idx].message;
-  panel.style.display = 'block';
   panel.innerHTML = msg ? msg : '';
-  fadeInMessagePanel(panel);
 }
 
 for (let i = 0; i < sections.length; i++) {
@@ -180,18 +163,3 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
-// Set the text of the message panel (does not change visibility)
-function setMessagePanelText(message) {
-  const panel = document.getElementById('message-panel');
-  if (panel) {
-    if (message === null || message === undefined || message === '') {
-      panel.textContent = '';
-      panel.style.display = 'none';
-    } else {
-      panel.textContent = message;
-      panel.style.display = 'block';
-    }
-  }
-}
-
-window.setMessagePanelText = setMessagePanelText;
