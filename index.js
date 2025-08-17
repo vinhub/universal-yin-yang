@@ -5,12 +5,13 @@ const sections = [
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white'),
     title: 'The Yin-Yang Model of Reality',
     animated: false,
-    message: "The Yin-Yang represents how seemingly opposite forces in reality are " +
-             "interconnected and interdependent. It illustrates that various aspects of reality such as light and dark, " +
-             "male and female, order and chaos, etc. are not just opposites, but complementary, " +
-             "each containing a seed of the other, and together creating balance and harmony." +
-             "Going deeper into into this concept reveals some interesting insights. <br/>" +
-             "Click on the Next button to continue."
+    message: "The Yin-Yang represents how seemingly opposite phenomena in nature are, in fact, " +
+             "interdependent, intertwined, and complementary. Some examples of such forces are day and night, summer and winter, " +
+             "masculinity and femininity, order and chaos, etc. " +
+             "Also, each member of such a pair contains a seed of the other. " +
+             "Taken together, this structure creates balance and harmony.  " +
+             "Let us see how digging deeper into this concept reveals many interesting insights. <br/><br/>" +
+             "Click on the arrow button to continue."
   },
   {
     canvasId: 'canvas-dynamic',
@@ -27,9 +28,9 @@ const sections = [
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'red', 'blue'),
     title: 'The Yin-Yang of Politics',
     animated: true,
-    message: "Most political systems consist of two opposing forces, represented by the blue and red colors here. " +
-             "They demonstrate the same dynamic yet balanced nature of the Yin-Yang, " +
-             "with the two sides keeping each other in check over time." +
+    message: "Most political systems consist of two opposing forces at the highest level, represented by the blue and red colors here. " +
+             "They demonstrate the same characteristic nature and dynamism of the Yin-Yang, " +
+             "with the two sides constantly pushing against each other, while keeping each other in check over time. " +
              "The expansion and contraction of the forces may follow cycles of varying lengths and amplitudes, " +
              "and multiple cycles may coexist and overlap, creating a complex dynamic."
   }
