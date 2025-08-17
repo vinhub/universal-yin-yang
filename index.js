@@ -5,7 +5,7 @@ const sections = [
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white'),
     title: 'The Yin-Yang Model of Reality',
     animated: false,
-    message: "The Yin-Yang represents the duality in nature — how seemingly opposite forces are " +
+    message: "The Yin-Yang represents how seemingly opposite forces in reality are " +
              "interconnected and interdependent. It illustrates that various aspects of reality such as light and dark, " +
              "male and female, order and chaos, etc. are not just opposites, but complementary, " +
              "each containing a seed of the other, and together creating balance and harmony." +
@@ -17,14 +17,21 @@ const sections = [
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'black', 'white'),
     title: 'The Yin-Yang is Dynamic',
     animated: true,
-    message: "This is the dynamic animated Yin-Yang."
+    message: "The Yin-Yang isn't static. " +
+             "The two forces in it are constantly expanding and contracting and influencing each other. " +
+             "Over the short term, one of them may appear to be gaining the upper hand. " +
+             "But soon enough the process reverses, making the opposing force dominant."
   },
   {
     canvasId: 'canvas-political',
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'red', 'blue'),
     title: 'The Yin-Yang of Politics',
     animated: true,
-    message: "This is the political red/blue Yin-Yang."
+    message: "Most political systems consist of two opposing forces, represented by the blue and red colors here. " +
+             "They demonstrate the same dynamic yet balanced nature of the Yin-Yang, " +
+             "with the two sides keeping each other in check over time." +
+             "The expansion and contraction of the forces may follow cycles of varying lengths and amplitudes, " +
+             "and multiple cycles may coexist and overlap, creating a complex dynamic."
   }
 ];
 
