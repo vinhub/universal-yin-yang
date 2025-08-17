@@ -24,15 +24,31 @@ const sections = [
              "But soon enough the process reverses, making the opposing force dominant."
   },
   {
+    canvasId: 'canvas-cycles',
+    draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'black', 'white'),
+    title: 'Multiple Overlapping Cycles',
+    animated: true,
+    message: "The expansion and contraction of the two forces may follow cycles of varying lengths and amplitudes, " +
+             "and multiple cycles may coexist and overlap, creating a complex dynamic."
+  },
+  {
+    canvasId: 'canvas-evolution',
+    draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'black', 'white'),
+    title: 'Balance vs Evolution',
+    animated: true,
+    message: "Not all phenomena in nature follow the Yin-Yang principle. " +
+             "In some cases, new phenomena may appear, or existing ones may cease to exist. " +
+             "Also, some of them may go through a process of evolution over some period of time."
+  },
+  {
     canvasId: 'canvas-political',
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'red', 'blue'),
     title: 'The Yin-Yang of Politics',
     animated: true,
-    message: "Most political systems consist of two opposing forces at the highest level, represented by the blue and red colors here. " +
+    message: "As a real-world example of a phenomenon that is near and dear to all of us &#128522;, let us take a look at politics. " +
+             "Most political systems consist of two opposing forces at the highest level, represented by the blue and red colors here. " +
              "They demonstrate the same characteristic nature and dynamism of the Yin-Yang, " +
-             "with the two sides constantly pushing against each other, while keeping each other in check over time. " +
-             "The expansion and contraction of the forces may follow cycles of varying lengths and amplitudes, " +
-             "and multiple cycles may coexist and overlap, creating a complex dynamic."
+             "with the two sides constantly pushing against each other, while keeping each other in check over time. "
   }
 ];
 
