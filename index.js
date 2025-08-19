@@ -5,6 +5,7 @@ const sections = [
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white'),
     title: 'The Yin-Yang Model of Reality',
     animated: false,
+    complex: false,
     message: "The Yin-Yang represents how seemingly opposite phenomena in nature are, in fact, " +
              "interdependent, intertwined, and complementary. Some examples of such forces are day and night, summer and winter, " +
              "masculinity and femininity, order and chaos, etc. " +
@@ -18,6 +19,7 @@ const sections = [
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'black', 'white'),
     title: 'The Yin-Yang is Dynamic',
     animated: true,
+    complex: false,
     message: "The Yin-Yang isn't static. " +
              "The two forces in it are constantly expanding and contracting and influencing each other. " +
              "Over the short term, one of them may appear to be gaining the upper hand. " +
@@ -26,16 +28,20 @@ const sections = [
   {
     canvasId: 'canvas-cycles',
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: 'Multiple Overlapping Cycles',
+    title: 'The Cycles are Complex',
     animated: true,
-    message: "The expansion and contraction of the two forces may follow cycles of varying lengths and amplitudes, " +
-             "and multiple cycles may coexist and overlap, creating a complex dynamic."
-  },
+    complex: true,
+    message: "The expansion and contraction of the two forces may follow cycles of varying amplitides and lengths, " +
+             "creating a complex dynamic. " +
+             "If you watch the animation closely, you will see that the cycles keep changing from time to time. " +
+             "This also means that it is hard to predict how long or how far a cycle may go before it reverses." 
+},
   {
     canvasId: 'canvas-evolution',
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'black', 'white'),
     title: 'Balance vs Evolution',
     animated: true,
+    complex: true,
     message: "Not all phenomena in nature follow the Yin-Yang principle. " +
              "In some cases, new phenomena may appear, or existing ones may cease to exist. " +
              "Also, some of them may go through a process of evolution over some period of time."
@@ -45,6 +51,7 @@ const sections = [
     draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'red', 'blue'),
     title: 'The Yin-Yang of Politics',
     animated: true,
+    complex: true,
     message: "As a real-world example of a phenomenon that is near and dear to all of us &#128522;, let us take a look at politics. " +
              "Most political systems consist of two opposing forces at the highest level, represented by the blue and red colors here. " +
              "They demonstrate the same characteristic nature and dynamism of the Yin-Yang, " +
@@ -64,7 +71,7 @@ function animateSection(sectionIdx, time = 0) {
   const section = sections[sectionIdx];
   const canvas = document.getElementById(section.canvasId);
   const ctx = canvas.getContext('2d');
-  const minFactor = 0.5;
+  let minFactor = 0.5;
   const steps = 360;
   const angleStep = 2 * Math.PI / steps;
   let yinYangRadius;
@@ -82,6 +89,10 @@ function animateSection(sectionIdx, time = 0) {
   }
   function frame(t) {
     const blend = 0.5 * (1 + Math.sin(t * angleStep));
+    if (section.complex && (Math.abs(blend - 0.5) < 0.001)) {
+        // Randomize minFactor so the cycles keep changing in amplitude and length
+        minFactor = Math.random(); // Range: 0.0 to 1.0
+    }
     const minRadius = minFactor * 0.5 * yinYangRadius;
     const maxRadius = yinYangRadius - minRadius;
     const circle1Radius = blend * minRadius + (1 - blend) * maxRadius;
