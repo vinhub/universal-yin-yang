@@ -2,7 +2,7 @@
 const sections = [
   {
     canvasId: 'canvas-classic',
-    draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white'),
+    draw: (blend, r1, r2, ctx, rad) => drawYinYang(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white'),
     title: 'The Yin-Yang model of reality',
     type: 'static',
     message: "The Yin-Yang represents how seemingly opposite phenomena in nature are, in fact, " +
@@ -15,7 +15,7 @@ const sections = [
   },
   {
     canvasId: 'canvas-dynamic',
-    draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'black', 'white'),
+    draw: (blend, r1, r2, ctx, rad) => drawYinYang(blend, r1, r2, ctx, rad, 'black', 'white'),
     title: 'The Yin-Yang is dynamic',
     type: 'animated',
     message: "The Yin-Yang isn't static. " +
@@ -25,7 +25,7 @@ const sections = [
   },
   {
     canvasId: 'canvas-cycles',
-    draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'black', 'white'),
+    draw: (blend, r1, r2, ctx, rad) => drawYinYang(blend, r1, r2, ctx, rad, 'black', 'white'),
     title: 'The cycles are also dynamic',
     type: 'complex',
     message: "The expansion and contraction of the two forces may follow cycles of varying amplitides and lengths, " +
@@ -35,16 +35,16 @@ const sections = [
 },
   {
     canvasId: 'canvas-evolution',
-    draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'black', 'white'),
+    draw: (blend, r1, r2, ctx, rad) => drawYinYang(blend, r1, r2, ctx, rad, 'black', 'white'),
     title: 'Balance vs evolution',
-    type: 'complex',
+    type: 'evolution',
     message: "Not all phenomena in nature follow the Yin-Yang principle. " +
              "In some cases, new phenomena may appear, or existing ones may cease to exist. " +
              "Also, some of them may go through a process of evolution over some period of time."
   },
   {
     canvasId: 'canvas-political',
-    draw: (blend, r1, r2, ctx, rad) => drawYinYangColors(blend, r1, r2, ctx, rad, 'red', 'blue'),
+    draw: (blend, r1, r2, ctx, rad) => drawYinYang(blend, r1, r2, ctx, rad, 'red', 'blue'),
     title: 'The Yin-Yang of politics',
     type: 'complex',
     message: "As a real-world example of a phenomenon that is near and dear to all of us &#128522;, let us take a look at politics. " +
@@ -70,6 +70,7 @@ function animateSection(sectionIdx, time = 0) {
   const steps = 360;
   const angleStep = 2 * Math.PI / steps;
   let yinYangRadius;
+  let radiusFactor = 0;
   function resizeCanvas() {
     canvas.width = canvas.height = Math.round(canvas.getBoundingClientRect().width);
     yinYangRadius = 0.5 * canvas.width;
@@ -82,19 +83,54 @@ function animateSection(sectionIdx, time = 0) {
     section.draw(0.5, yinYangRadius * 0.75, yinYangRadius * 0.25, ctx, yinYangRadius);
     return;
   }
+  let evolving = false;
+  function drawFlower(ctx, rad) {
+    ctx.save();
+    ctx.rotate(Math.PI / 2);
+    for (let i = 0; i < 8; i++) {
+      ctx.save();
+      ctx.rotate((Math.PI / 4) * i);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.bezierCurveTo(rad * 0.2, rad * 0.2, rad * 0.7, rad * 0.2, rad * 0.7, 0);
+      ctx.bezierCurveTo(rad * 0.7, -rad * 0.2, rad * 0.2, -rad * 0.2, 0, 0);
+      ctx.closePath();
+      ctx.fillStyle = i % 2 === 0 ? 'black' : 'white';
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
   function frame(t) {
     const blend = 0.5 * (1 + Math.sin(t * angleStep));
     if (section.type === 'complex' && (Math.abs(blend - 0.5) < 0.001)) {
-        // Randomize minFactor so the cycles keep changing in amplitude and length
-        minFactor = Math.random(); // Range: 0.0 to 1.0
+      minFactor = Math.random();
     }
-    const minRadius = minFactor * 0.5 * yinYangRadius;
-    const maxRadius = yinYangRadius - minRadius;
+    if (section.type === 'evolution') {
+      // Shrink yinyang and expand flower after a time lapse
+      if (!evolving && Math.abs(blend - 0) < 0.001) {
+        evolving = true;
+        radiusFactor = 0;
+      }
+      if (evolving) {
+        radiusFactor += 0.005;
+        if (radiusFactor > 1) radiusFactor = 1;
+        drawFlower(ctx, yinYangRadius * radiusFactor);
+        if (radiusFactor >= 1)
+          return;
+      }
+    }
+
+    const minRadius = minFactor * 0.5 * yinYangRadius * (1 - radiusFactor);
+    const maxRadius = (yinYangRadius * (1 - radiusFactor)) - minRadius;
     const circle1Radius = blend * minRadius + (1 - blend) * maxRadius;
-    const circle2Radius = yinYangRadius - circle1Radius;
-    section.draw(blend, circle1Radius, circle2Radius, ctx, yinYangRadius);
+    const circle2Radius = (yinYangRadius * (1 - radiusFactor)) - circle1Radius;
+
+    section.draw(blend, circle1Radius, circle2Radius, ctx, yinYangRadius * (1 - radiusFactor));
     animationFrameId = requestAnimationFrame(() => frame(t + 0.5));
   }
+  const startTime = time;
   frame(time);
   window.addEventListener('resize', resizeCanvas, false);
 }
@@ -123,8 +159,8 @@ for (let i = 0; i < sections.length; i++) {
 }
 
 // Parameterized Yin-Yang drawing
-function drawYinYangColors(blend, circle1Radius, circle2Radius, ctx, yinYangRadius, colorA, colorB) {
-  ctx.clearRect(-yinYangRadius, -yinYangRadius, yinYangRadius * 2, yinYangRadius * 2);
+function drawYinYang(blend, circle1Radius, circle2Radius, ctx, yinYangRadius, colorA, colorB) {
+  ctx.clearRect(-yinYangRadius * 2, -yinYangRadius * 2, yinYangRadius * 4, yinYangRadius * 4);
   ctx.save();
   ctx.rotate(Math.PI / 2);
   let dot1Radius, dot2Radius;
