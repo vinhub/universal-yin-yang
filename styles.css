@@ -28,6 +28,11 @@ canvas {
   border: 2px solid #ffe5b9;
   order: 2;
 }
+
+/* Make the composite canvas square instead of circular */
+#canvas-everywhere {
+  border-radius: 12px;
+}
 #nav-buttons {
   position: absolute;
   bottom: 32px;

@@ -298,34 +298,33 @@ const YinYangDrawer = {
       return (x - Math.floor(x)); // Get fractional part for 0-1 range
     };
     
-    // Create fewer positions but with much more varied sizes
+    // Create fewer positions but with much more varied sizes - keep within bounds
     const positions = [
-      { x: 0, y: 0, size: 0.55 },                    // Center - very large
-      { x: -0.6, y: -0.4, size: 0.35 },            // Top left - large
-      { x: 0.7, y: -0.3, size: 0.12 },             // Top right - tiny
-      { x: -0.4, y: 0.6, size: 0.42 },             // Bottom left - very large
-      { x: 0.5, y: 0.7, size: 0.08 },              // Bottom right - very tiny
-      { x: 0.8, y: 0.1, size: 0.28 },              // Right middle - medium
-      { x: -0.8, y: 0.2, size: 0.15 },             // Left middle - small
-      { x: 0.2, y: -0.8, size: 0.38 },             // Top center - large
-      { x: -0.2, y: 0.3, size: 0.22 }              // Near center - medium-small
+      { x: 0, y: 0, size: 0.35 },                    // Center - very large
+      { x: -0.65, y: -0.65, size: 0.25 },          // Top left - large (adjusted for size)
+      { x: 0.85, y: -0.65, size: 0.15 },           // Top right - small (adjusted for size)
+      { x: -0.68, y: 0.68, size: 0.32 },           // Bottom left - very large (adjusted for size)
+      { x: 0.86, y: 0.86, size: 0.14 },            // Bottom right - small (adjusted for size)
+      { x: 0.82, y: 0.1, size: 0.18 },             // Far right middle - medium (adjusted for size)
+      { x: -0.84, y: 0.3, size: 0.16 },            // Far left middle - small (adjusted for size)
+      { x: 0.3, y: -0.72, size: 0.28 },            // Top edge - large (adjusted for size)
+      { x: -0.3, y: 0.4, size: 0.15 }              // Near center - medium-small
     ];
     
-    // Add fewer randomized positions but with extreme size variation
+    // Add fewer randomized positions but with extreme size variation - keep within bounds
     for (let i = 0; i < 3; i++) {
-      const angle = random(i * 17) * 2 * Math.PI;
-      const distance = 0.5 + random(i * 23) * 0.4;
-      const x = Math.cos(angle) * distance;
-      const y = Math.sin(angle) * distance;
-      // Much wider size range: from very tiny to very large
-      const size = 0.06 + random(i * 31) * 0.45;
+      // Generate size first, then adjust position range based on size
+      const size = 0.10 + random(i * 31) * 0.24;
+      const maxPos = 1.0 - size; // Ensure the edge of the Yin-Yang doesn't go beyond bounds
+      const x = (random(i * 13) - 0.5) * 2 * maxPos;
+      const y = (random(i * 19) - 0.5) * 2 * maxPos;
       positions.push({ x, y, size });
     }
     
     positions.forEach((pos, index) => {
       ctx.save();
       
-      // Position with gentle drift - smaller drift for more Yin-Yangs
+      // Position with gentle drift - use yinYangRadius as the scale
       const driftX = Math.sin(time * 0.0008 + index * 0.5) * 0.03;
       const driftY = Math.cos(time * 0.0006 + index * 0.8) * 0.025;
       ctx.translate((pos.x + driftX) * yinYangRadius, (pos.y + driftY) * yinYangRadius);
@@ -339,8 +338,8 @@ const YinYangDrawer = {
       const r1 = miniRadius * (0.25 + 0.5 * blend);
       const r2 = miniRadius - r1;
       
-      const colors = ANIMATION_CONFIG.compositeColors[index % ANIMATION_CONFIG.compositeColors.length];
-      this.drawBasicNoClear(blend, r1, r2, ctx, miniRadius, colors[0], colors[1]);
+      // Use only black and white colors for all Yin-Yangs in composite section
+      this.drawBasicNoClear(blend, r1, r2, ctx, miniRadius, 'black', 'white');
       
       ctx.restore();
     });
