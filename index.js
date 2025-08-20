@@ -121,7 +121,11 @@ function animateSection(sectionIdx, time = 0) {
     const circle1Radius = blend * minRadius + (1 - blend) * maxRadius;
     const circle2Radius = (yinYangRadius * (1 - radiusFactor)) - circle1Radius;
 
-    section.draw(blend, circle1Radius, circle2Radius, ctx, yinYangRadius * (1 - radiusFactor));
+    if (section.type === 'fractal') {
+      drawFractalYinYang(blend, circle1Radius, circle2Radius, ctx, yinYangRadius * (1 - radiusFactor), 'black', 'white', t);
+    } else {
+      section.draw(blend, circle1Radius, circle2Radius, ctx, yinYangRadius * (1 - radiusFactor));
+    }
 
     if (section.type === 'evolution') {
       // Shrink yinyang and expand flower
@@ -158,6 +162,110 @@ for (let i = 0; i < sections.length; i++) {
   document.getElementById(`arrow-right-${i}`).addEventListener('click', () => {
     if (currentSection < sections.length - 1) showSection(++currentSection);
   });
+}
+
+// Fractal Yin-Yang drawing - replaces inner dots with small animated Yin-Yangs
+function drawFractalYinYang(blend, circle1Radius, circle2Radius, ctx, yinYangRadius, colorA, colorB, time) {
+  ctx.clearRect(-yinYangRadius * 2, -yinYangRadius * 2, yinYangRadius * 4, yinYangRadius * 4);
+  ctx.save();
+  ctx.rotate(Math.PI / 2);
+  let dot1Radius, dot2Radius;
+  if (circle1Radius <= circle2Radius) {
+    dot2Radius = circle1Radius / 3;
+    const dot1Area = (0.5 * Math.PI * circle2Radius * circle2Radius) + 
+                            (Math.PI * dot2Radius * dot2Radius) -
+                            (0.5 * Math.PI * circle1Radius * circle1Radius)
+    dot1Radius = dot1Area > 0 ? Math.sqrt(dot1Area / Math.PI) : 0;
+  } else {
+    dot1Radius = circle2Radius / 3;
+    const dot2Area = (0.5 * Math.PI * circle1Radius * circle1Radius) + 
+                            (Math.PI * dot1Radius * dot1Radius) -
+                            (0.5 * Math.PI * circle2Radius * circle2Radius);
+    dot2Radius = dot2Area > 0 ? Math.sqrt(dot2Area / Math.PI) : 0;
+  }
+  
+  // Draw main Yin-Yang body (without dots)
+  ctx.fillStyle = colorA;
+  ctx.beginPath();
+  ctx.arc(0, 0, yinYangRadius, 0, Math.PI);
+  ctx.arc(-circle1Radius, 0, circle2Radius, Math.PI, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = colorB;
+  ctx.beginPath();
+  ctx.arc(0, 0, yinYangRadius, -Math.PI, 0);
+  ctx.arc(circle2Radius, 0, circle1Radius, 0, Math.PI);
+  ctx.arc(-circle1Radius, 0, circle2Radius, 0, -Math.PI, true);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Draw fractal Yin-Yangs instead of dots
+  const fractalBlend1 = 0.5 * (1 + Math.sin(time * 0.02));
+  const fractalBlend2 = 0.5 * (1 + Math.sin(time * 0.03 + Math.PI));
+  
+  // First fractal Yin-Yang (in the white section)
+  if (dot1Radius > 0) {
+    ctx.save();
+    ctx.translate(-circle1Radius, 0);
+    const fractalR1_1 = dot1Radius * 0.4 * fractalBlend1 + dot1Radius * 0.1 * (1 - fractalBlend1);
+    const fractalR1_2 = dot1Radius - fractalR1_1;
+    drawMiniYinYang(fractalBlend1, fractalR1_1, fractalR1_2, ctx, dot1Radius, colorB, colorA);
+    ctx.restore();
+  }
+  
+  // Second fractal Yin-Yang (in the black section)
+  if (dot2Radius > 0) {
+    ctx.save();
+    ctx.translate(circle2Radius, 0);
+    const fractalR2_1 = dot2Radius * 0.4 * fractalBlend2 + dot2Radius * 0.1 * (1 - fractalBlend2);
+    const fractalR2_2 = dot2Radius - fractalR2_1;
+    drawMiniYinYang(fractalBlend2, fractalR2_1, fractalR2_2, ctx, dot2Radius, colorA, colorB);
+    ctx.restore();
+  }
+  
+  ctx.restore();
+}
+
+// Helper function to draw mini Yin-Yangs
+function drawMiniYinYang(blend, circle1Radius, circle2Radius, ctx, yinYangRadius, colorA, colorB) {
+  ctx.save();
+  ctx.rotate(Math.PI / 2);
+  
+  // Calculate mini dot sizes (keep them as regular dots to avoid infinite recursion)
+  let dot1Radius = circle2Radius / 4;
+  let dot2Radius = circle1Radius / 4;
+  
+  // Draw mini Yin-Yang body
+  ctx.fillStyle = colorA;
+  ctx.beginPath();
+  ctx.arc(0, 0, yinYangRadius, 0, Math.PI);
+  ctx.arc(-circle1Radius, 0, circle2Radius, Math.PI, 0);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.fillStyle = colorB;
+  ctx.beginPath();
+  ctx.arc(0, 0, yinYangRadius, -Math.PI, 0);
+  ctx.arc(circle2Radius, 0, circle1Radius, 0, Math.PI);
+  ctx.arc(-circle1Radius, 0, circle2Radius, 0, -Math.PI, true);
+  ctx.arc(-circle1Radius, 0, dot1Radius, 0, 2 * Math.PI);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.fillStyle = colorA;
+  ctx.beginPath();
+  ctx.arc(circle2Radius, 0, dot2Radius, 0, 2 * Math.PI);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Draw circular border around the mini Yin-Yang
+  ctx.strokeStyle = colorA === 'black' ? 'black' : 'white'; // Use contrasting color for border
+  ctx.lineWidth = yinYangRadius * 0.025;
+  ctx.beginPath();
+  ctx.arc(0, 0, yinYangRadius, 0, 2 * Math.PI);
+  ctx.stroke();
+  
+  ctx.restore();
 }
 
 // Parameterized Yin-Yang drawing
