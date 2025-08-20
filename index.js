@@ -16,10 +16,10 @@ const sections = [
   {
     canvasId: 'canvas-dynamic',
     draw: (blend, r1, r2, ctx, rad) => drawYinYang(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: 'The Yin-Yang is dynamic',
+    title: 'Yin-Yangs are dynamic',
     type: 'animated',
-    message: "The Yin-Yang isn't static. " +
-             "The two forces in it are constantly expanding and contracting and influencing each other. " +
+    message: "Yin-Yangs aren't static. " +
+             "The two forces in them are constantly expanding and contracting and influencing each other. " +
              "Over the short term, one of them may appear to be gaining the upper hand. " +
              "But soon enough the process reverses, making the opposing force dominant."
   },
@@ -45,7 +45,7 @@ const sections = [
   {
     canvasId: 'canvas-political',
     draw: (blend, r1, r2, ctx, rad) => drawYinYang(blend, r1, r2, ctx, rad, 'red', 'blue'),
-    title: 'The Yin-Yang of politics',
+    title: 'Example: Political Yin-Yang',
     type: 'complex',
     message: "As a real-world example of a phenomenon that is near and dear to all of us &#128522;, let us take a look at politics. " +
              "Most political systems consist of two opposing forces at the highest level, represented by the blue and red colors here. " +
@@ -91,8 +91,8 @@ function animateSection(sectionIdx, time = 0) {
       ctx.rotate((Math.PI / 4) * i);
       ctx.beginPath();
       ctx.moveTo(0, 0);
-      ctx.bezierCurveTo(rad * 0.2, rad * 0.2, rad * 0.7, rad * 0.2, rad * 0.7, 0);
-      ctx.bezierCurveTo(rad * 0.7, -rad * 0.2, rad * 0.2, -rad * 0.2, 0, 0);
+      ctx.bezierCurveTo(rad * 0.25, rad * 0.25, rad * 1.0, rad * 0.25, rad * 1.0, 0);
+      ctx.bezierCurveTo(rad * 1.0, -rad * 0.25, rad * 0.25, -rad * 0.25, 0, 0);
       ctx.closePath();
       ctx.fillStyle = i % 2 === 0 ? 'black' : 'white';
       ctx.fill();
