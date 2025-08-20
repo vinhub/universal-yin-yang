@@ -32,15 +32,6 @@ const sections = [
              "creating a complex dynamic. " +
              "If you watch the animation closely, you will see that the cycles keep changing from time to time. " +
              "This also means that it is hard to predict how long or how far a cycle may go before it reverses." 
-},
-  {
-    canvasId: 'canvas-evolution',
-    draw: (blend, r1, r2, ctx, rad) => drawYinYang(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: 'Yin-Yangs can evolve',
-    type: 'evolution',
-    message: "Sometimes the structure of a Yin-Yang relationship can evolve into a different form. " +
-             "In some cases, new structures may appear, or existing ones may cease to exist. " +
-             "And yet, the basic principles of balance, interdependence, and complementarity remain the same."
   },
   {
     canvasId: 'canvas-political',
@@ -51,6 +42,24 @@ const sections = [
              "Most political systems consist of two opposing forces at the highest level, represented by the blue and red colors here. " +
              "They demonstrate the same characteristic nature and dynamism of the Yin-Yang, " +
              "with the two sides constantly pushing against each other, while keeping each other in check over time. "
+  },
+  {
+    canvasId: 'canvas-fractal',
+    draw: (blend, r1, r2, ctx, rad) => drawYinYang(blend, r1, r2, ctx, rad, 'black', 'white'),
+    title: 'Yin-Yangs are fractal',
+    type: 'fractal',
+    message: "Yin-Yangs exhibit self-similarity at different scales, much like fractals. " +
+             "No matter how closely you examine them, you will always find the same underlying patterns and structures. " +
+             "It shows that these principles are not just applicable at one level, but are universal across all levels of existence."
+  },
+  {
+    canvasId: 'canvas-evolution',
+    draw: (blend, r1, r2, ctx, rad) => drawYinYang(blend, r1, r2, ctx, rad, 'black', 'white'),
+    title: 'Yin-Yangs can evolve',
+    type: 'evolution',
+    message: "Sometimes the structure of a Yin-Yang relationship can evolve into a different form. " +
+             "In some cases, new structures may appear, or existing ones may cease to exist. " +
+             "And yet, the basic principles of balance, interdependence, and complementarity remain the same."
   }
 ];
 
