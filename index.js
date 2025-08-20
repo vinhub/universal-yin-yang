@@ -10,7 +10,16 @@ const ANIMATION_CONFIG = {
   fractalSpeed2: 0.03,
   evolutionSpeed: 0.003,
   flowerPetalCount: 8,
-  borderWidth: 0.025
+  borderWidth: 0.025,
+  compositeCount: 6,
+  compositeColors: [
+    ['black', 'white'],
+    ['red', 'blue'],
+    ['green', 'orange'],
+    ['purple', 'yellow'],
+    ['navy', 'pink'],
+    ['darkred', 'lightblue']
+  ]
 };
 
 const SECTION_DATA = [
@@ -75,6 +84,17 @@ const SECTION_DATA = [
     message: "Sometimes a Yin-Yang relationship can evolve into a different form. " +
              "In some cases, new relationships may appear, or existing ones may cease to exist. " +
              "And yet, the basic principles of balance, interdependence, and complementarity remain."
+  },
+  {
+    canvasId: 'canvas-everywhere',
+    draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
+    title: '7. Yin-Yangs are everywhere',
+    type: 'composite',
+    message: "The Yin-Yang is one of life's most profound patterns. Now that you understand them, " +
+             "you'll start noticing them everywhere: in relationships, in nature, in your daily rhythms, even in your own thoughts and emotions. " +
+             "Every challenge contains opportunity, every ending enables a new beginning, every breath out makes the breath in possible. " +
+             "This ancient wisdom isn't just philosophy—it's a practical tool for navigating life with more grace, balance, and understanding. " +
+             "The dance continues, and now you're aware you're also a part of it. Welcome to seeing the world through Yin-Yang eyes! &#127775;"
   }
 ];
 
@@ -224,6 +244,43 @@ const YinYangDrawer = {
     ctx.stroke();
     
     ctx.restore();
+  },
+
+  drawComposite(ctx, yinYangRadius, time) {
+    ctx.clearRect(-yinYangRadius * 2, -yinYangRadius * 2, yinYangRadius * 4, yinYangRadius * 4);
+    
+    // Draw multiple small Yin-Yangs scattered around
+    const positions = [
+      { x: 0, y: 0, size: 0.4 },           // Center - largest
+      { x: -0.6, y: -0.5, size: 0.25 },   // Top left
+      { x: 0.7, y: -0.3, size: 0.2 },     // Top right
+      { x: -0.4, y: 0.6, size: 0.22 },    // Bottom left
+      { x: 0.5, y: 0.7, size: 0.18 },     // Bottom right
+      { x: 0.8, y: 0.1, size: 0.15 }      // Right middle
+    ];
+    
+    positions.forEach((pos, index) => {
+      ctx.save();
+      
+      // Position and gentle drift
+      const driftX = Math.sin(time * 0.001 + index * 0.7) * 0.05;
+      const driftY = Math.cos(time * 0.0008 + index * 1.2) * 0.03;
+      ctx.translate((pos.x + driftX) * yinYangRadius, (pos.y + driftY) * yinYangRadius);
+      
+      // Rotation at different speeds
+      const rotationSpeed = 0.002 + (index * 0.0005);
+      ctx.rotate(time * rotationSpeed + index * Math.PI / 3);
+      
+      const miniRadius = yinYangRadius * pos.size;
+      const blend = 0.5 * (1 + Math.sin(time * 0.003 + index * 1.5));
+      const r1 = miniRadius * (0.3 + 0.4 * blend);
+      const r2 = miniRadius - r1;
+      
+      const colors = ANIMATION_CONFIG.compositeColors[index % ANIMATION_CONFIG.compositeColors.length];
+      this.drawBasic(blend, r1, r2, ctx, miniRadius, colors[0], colors[1]);
+      
+      ctx.restore();
+    });
   }
 };
 
@@ -302,6 +359,8 @@ const AnimationController = {
 
       if (section.type === 'fractal') {
         YinYangDrawer.drawFractal(blend, circle1Radius, circle2Radius, ctx, yinYangRadius * (1 - radiusFactor), 'black', 'white', t);
+      } else if (section.type === 'composite') {
+        YinYangDrawer.drawComposite(ctx, yinYangRadius, t);
       } else {
         section.draw(blend, circle1Radius, circle2Radius, ctx, yinYangRadius * (1 - radiusFactor));
       }
