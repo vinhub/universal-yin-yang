@@ -17,7 +17,7 @@ const SECTION_DATA = [
   {
     canvasId: 'canvas-classic',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white'),
-    title: 'The Yin-Yang model of reality',
+    title: '1. Yin-Yang model of reality',
     type: 'static',
     message: "The Yin-Yang represents how seemingly opposite phenomena in nature are, in fact, " +
              "interdependent, intertwined, and complementary. Some examples of such forces are day and night, summer and winter, " +
@@ -30,7 +30,7 @@ const SECTION_DATA = [
   {
     canvasId: 'canvas-dynamic',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: 'Yin-Yangs are dynamic',
+    title: '2. Yin-Yangs are dynamic',
     type: 'animated',
     message: "Yin-Yangs aren't static. " +
              "The two forces in them are constantly expanding and contracting and influencing each other. " +
@@ -40,7 +40,7 @@ const SECTION_DATA = [
   {
     canvasId: 'canvas-cycles',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: 'The cycles are also dynamic',
+    title: '3. Each cycle is different',
     type: 'complex',
     message: "The expansion and contraction of the two forces may follow cycles of varying amplitides and lengths, " +
              "creating a complex dynamic. " +
@@ -50,7 +50,7 @@ const SECTION_DATA = [
   {
     canvasId: 'canvas-political',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'red', 'blue'),
-    title: 'Example: Political Yin-Yang',
+    title: '4. Example: Political Yin-Yang',
     type: 'complex',
     message: "As a real-world example of a phenomenon that is near and dear to all of us &#128522;, let us take a look at politics. " +
              "Most political systems consist of two opposing forces at the highest level, represented by the blue and red colors here. " +
@@ -60,7 +60,7 @@ const SECTION_DATA = [
   {
     canvasId: 'canvas-fractal',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: 'Yin-Yangs are fractal',
+    title: '5. Yin-Yangs are fractal',
     type: 'fractal',
     message: "Yin-Yangs exhibit self-similarity at different scales, much like fractals. " +
              "No matter how closely you examine them, you will always find the same underlying patterns and structures. " +
@@ -69,7 +69,7 @@ const SECTION_DATA = [
   {
     canvasId: 'canvas-evolution',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: 'Yin-Yangs can evolve',
+    title: '6. Yin-Yangs can evolve',
     type: 'evolution',
     message: "Sometimes the structure of a Yin-Yang relationship can evolve into a different form. " +
              "In some cases, new structures may appear, or existing ones may cease to exist. " +
