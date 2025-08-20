@@ -19,43 +19,44 @@ const SECTION_DATA = [
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white'),
     title: '1. Yin-Yang model of reality',
     type: 'static',
-    message: "The Yin-Yang represents how seemingly opposite phenomena in nature are, in fact, " +
-             "interdependent, intertwined, and complementary. Some examples of such forces are day and night, summer and winter, " +
-             "masculinity and femininity, order and chaos, etc. " +
-             "Also, each member of such a pair contains a seed of the other. " +
-             "Taken together, this structure creates balance and harmony.  " +
-             "Let us see how digging deeper into this concept reveals many interesting insights. <br/><br/>" +
-             "Click on the arrow button to continue."
+    message: "Life is full of opposites that actually work together: light and shadow, joy and sorrow, work and rest, " +
+             "giving and receiving. The Yin-Yang symbol shows us that these aren't really opposites fighting each other—" +
+             "they're dance partners, each one making the other more meaningful. " +
+             "Notice how each side contains a seed of the other, reminding us that within every challenge lies an opportunity, " +
+             "and within every triumph, a lesson in humility. <br/><br/>" +
+             "Ready to explore deeper? Click the arrow to continue this journey of discovery."
   },
   {
     canvasId: 'canvas-dynamic',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
     title: '2. Yin-Yangs are dynamic',
     type: 'animated',
-    message: "Yin-Yangs aren't static. " +
-             "The two forces in them are constantly expanding and contracting and influencing each other. " +
-             "Over the short term, one of them may appear to be gaining the upper hand. " +
-             "But soon enough the process reverses, making the opposing force dominant."
+    message: "Watch how the forces flow and shift—just like life itself! Nothing stays the same forever. " +
+             "Sometimes you're on top of the world, sometimes you're learning hard lessons. " +
+             "Sometimes you're giving your all, sometimes you need to receive and recharge. " +
+             "This constant dance isn't chaos—it's the rhythm of growth, renewal, and wisdom. " +
+             "Understanding this can bring peace to life's inevitable ups and downs."
   },
   {
     canvasId: 'canvas-cycles',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
     title: '3. Each cycle is different',
     type: 'complex',
-    message: "The expansion and contraction of the two forces may follow cycles of varying amplitides and lengths, " +
-             "creating a complex dynamic. " +
-             "If you watch the animation closely, you will see that the cycles keep changing from time to time. " +
-             "This also means that it is hard to predict how long or how far a cycle may go before it reverses." 
+    message: "Life doesn't follow a predictable script. Some seasons of challenge are brief, others stretch longer than expected. " +
+             "Some moments of joy are fleeting, others become lasting foundations. Watch closely—you'll see the cycles " +
+             "constantly changing in length and intensity. This unpredictability isn't a bug, it's a feature! " +
+             "It keeps life interesting and teaches us to stay flexible, present, and open to whatever comes next."
   },
   {
     canvasId: 'canvas-political',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'red', 'blue'),
     title: '4. Example: Political Yin-Yang',
     type: 'complex',
-    message: "As a real-world example of a phenomenon that is near and dear to all of us &#128522;, let us take a look at politics. " +
-             "Most political systems consist of two opposing forces at the highest level, represented by the blue and red colors here. " +
-             "They demonstrate the same characteristic nature and dynamism of the Yin-Yang, " +
-             "with the two sides constantly pushing against each other, while keeping each other in check over time. "
+    message: "Here's where it gets really interesting &#128522;—even in politics, the Yin-Yang principle shows up! " +
+             "Different political viewpoints (represented here in red and blue) might seem like enemies, " +
+             "but they actually serve an important purpose together. One side pushes for change and progress, " +
+             "the other provides stability and caution. Neither is completely right or wrong—they balance each other, " +
+             "preventing society from moving too fast or staying too still. Democracy works when both forces dance well together."
   },
   {
     canvasId: 'canvas-fractal',
@@ -71,9 +72,9 @@ const SECTION_DATA = [
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
     title: '6. Yin-Yangs can evolve',
     type: 'evolution',
-    message: "Sometimes the structure of a Yin-Yang relationship can evolve into a different form. " +
-             "In some cases, new structures may appear, or existing ones may cease to exist. " +
-             "And yet, the basic principles of balance, interdependence, and complementarity remain the same."
+    message: "Sometimes a Yin-Yang relationship can evolve into a different form. " +
+             "In some cases, new relationships may appear, or existing ones may cease to exist. " +
+             "And yet, the basic principles of balance, interdependence, and complementarity remain."
   }
 ];
 
