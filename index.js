@@ -36,11 +36,11 @@ const sections = [
   {
     canvasId: 'canvas-evolution',
     draw: (blend, r1, r2, ctx, rad) => drawYinYang(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: 'Balance vs evolution',
+    title: 'Yin-Yangs can evolve',
     type: 'evolution',
-    message: "Not all phenomena in nature follow the Yin-Yang principle. " +
-             "In some cases, new phenomena may appear, or existing ones may cease to exist. " +
-             "Also, some of them may go through a process of evolution over some period of time."
+    message: "Sometimes the structure of a Yin-Yang relationship can evolve into a different form. " +
+             "In some cases, new structures may appear, or existing ones may cease to exist. " +
+             "And yet, the basic principles of balance, interdependence, and complementarity remain the same."
   },
   {
     canvasId: 'canvas-political',
@@ -83,7 +83,6 @@ function animateSection(sectionIdx, time = 0) {
     section.draw(0.5, yinYangRadius * 0.75, yinYangRadius * 0.25, ctx, yinYangRadius);
     return;
   }
-  let evolving = false;
   function drawFlower(ctx, rad) {
     ctx.save();
     ctx.rotate(Math.PI / 2);
@@ -107,20 +106,6 @@ function animateSection(sectionIdx, time = 0) {
     if (section.type === 'complex' && (Math.abs(blend - 0.5) < 0.001)) {
       minFactor = Math.random();
     }
-    if (section.type === 'evolution') {
-      // Shrink yinyang and expand flower after a time lapse
-      if (!evolving && Math.abs(blend - 0) < 0.001) {
-        evolving = true;
-        radiusFactor = 0;
-      }
-      if (evolving) {
-        radiusFactor += 0.005;
-        if (radiusFactor > 1) radiusFactor = 1;
-        drawFlower(ctx, yinYangRadius * radiusFactor);
-        if (radiusFactor >= 1)
-          return;
-      }
-    }
 
     const minRadius = minFactor * 0.5 * yinYangRadius * (1 - radiusFactor);
     const maxRadius = (yinYangRadius * (1 - radiusFactor)) - minRadius;
@@ -128,9 +113,17 @@ function animateSection(sectionIdx, time = 0) {
     const circle2Radius = (yinYangRadius * (1 - radiusFactor)) - circle1Radius;
 
     section.draw(blend, circle1Radius, circle2Radius, ctx, yinYangRadius * (1 - radiusFactor));
+
+    if (section.type === 'evolution') {
+      // Shrink yinyang and expand flower
+      radiusFactor += Math.cosh(blend) * 0.003;
+      if (radiusFactor > 1) return;
+      drawFlower(ctx, yinYangRadius * radiusFactor);
+    }
+
     animationFrameId = requestAnimationFrame(() => frame(t + 0.5));
   }
-  const startTime = time;
+  
   frame(time);
   window.addEventListener('resize', resizeCanvas, false);
 }
