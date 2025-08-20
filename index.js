@@ -18,7 +18,13 @@ const ANIMATION_CONFIG = {
     ['green', 'orange'],
     ['purple', 'yellow'],
     ['navy', 'pink'],
-    ['darkred', 'lightblue']
+    ['darkred', 'lightblue'],
+    ['brown', 'cyan'],
+    ['magenta', 'lime'],
+    ['indigo', 'gold'],
+    ['crimson', 'lightgreen'],
+    ['teal', 'coral'],
+    ['darkviolet', 'khaki']
   ]
 };
 
@@ -155,6 +161,40 @@ const YinYangDrawer = {
     ctx.restore();
   },
 
+  drawBasicNoClear(blend, circle1Radius, circle2Radius, ctx, yinYangRadius, colorA, colorB) {
+    // Same as drawBasic but without clearRect
+    ctx.save();
+    ctx.rotate(Math.PI / 2);
+    
+    const { dot1Radius, dot2Radius } = this.calculateDotRadii(circle1Radius, circle2Radius);
+    
+    // Draw main Yin-Yang shape
+    ctx.fillStyle = colorA;
+    ctx.beginPath();
+    ctx.arc(0, 0, yinYangRadius, 0, Math.PI);
+    ctx.arc(-circle1Radius, 0, circle2Radius, Math.PI, 0);
+    ctx.closePath();
+    ctx.fill();
+    
+    ctx.fillStyle = colorB;
+    ctx.beginPath();
+    ctx.arc(0, 0, yinYangRadius, -Math.PI, 0);
+    ctx.arc(circle2Radius, 0, circle1Radius, 0, Math.PI);
+    ctx.arc(-circle1Radius, 0, circle2Radius, 0, -Math.PI, true);
+    ctx.arc(-circle1Radius, 0, dot1Radius, 0, 2 * Math.PI);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Draw dots
+    ctx.fillStyle = colorA;
+    ctx.beginPath();
+    ctx.arc(circle2Radius, 0, dot2Radius, 0, 2 * Math.PI);
+    ctx.closePath();
+    ctx.fill();
+    
+    ctx.restore();
+  },
+
   drawFractal(blend, circle1Radius, circle2Radius, ctx, yinYangRadius, colorA, colorB, time) {
     ctx.clearRect(-yinYangRadius * 2, -yinYangRadius * 2, yinYangRadius * 4, yinYangRadius * 4);
     ctx.save();
@@ -247,37 +287,65 @@ const YinYangDrawer = {
   },
 
   drawComposite(ctx, yinYangRadius, time) {
+    // Clear the entire canvas once at the beginning
     ctx.clearRect(-yinYangRadius * 2, -yinYangRadius * 2, yinYangRadius * 4, yinYangRadius * 4);
     
-    // Draw multiple small Yin-Yangs scattered around
+    // Generate randomized positions for more Yin-Yangs
+    // Use time-based seed for consistent but changing positions
+    const seed = Math.floor(time * 0.0001) * 12345;
+    const random = (index) => {
+      const x = Math.sin(seed + index * 123.456);
+      return (x - Math.floor(x)); // Get fractional part for 0-1 range
+    };
+    
+    // Create more positions with varied sizes
     const positions = [
-      { x: 0, y: 0, size: 0.4 },           // Center - largest
-      { x: -0.6, y: -0.5, size: 0.25 },   // Top left
-      { x: 0.7, y: -0.3, size: 0.2 },     // Top right
-      { x: -0.4, y: 0.6, size: 0.22 },    // Bottom left
-      { x: 0.5, y: 0.7, size: 0.18 },     // Bottom right
-      { x: 0.8, y: 0.1, size: 0.15 }      // Right middle
+      { x: 0, y: 0, size: 0.45 },                    // Center - large
+      { x: -0.65, y: -0.5, size: 0.28 },           // Top left
+      { x: 0.7, y: -0.35, size: 0.24 },            // Top right
+      { x: -0.45, y: 0.65, size: 0.32 },           // Bottom left
+      { x: 0.55, y: 0.7, size: 0.22 },             // Bottom right
+      { x: 0.8, y: 0.1, size: 0.18 },              // Right middle
+      { x: -0.8, y: 0.2, size: 0.20 },             // Left middle
+      { x: 0.3, y: -0.75, size: 0.19 },            // Top middle
+      { x: -0.2, y: -0.8, size: 0.21 },            // Top left-center
+      { x: 0.9, y: -0.6, size: 0.16 },             // Far top right
+      { x: -0.9, y: -0.3, size: 0.18 },            // Far left
+      { x: 0.2, y: 0.9, size: 0.23 },              // Bottom center
+      { x: -0.6, y: 0.3, size: 0.26 },             // Left-center
+      { x: 0.65, y: 0.3, size: 0.20 },             // Right-center
+      { x: -0.3, y: -0.2, size: 0.27 }             // Near center left
     ];
+    
+    // Add some randomized positions for variety
+    for (let i = 0; i < 5; i++) {
+      const angle = random(i * 17) * 2 * Math.PI;
+      const distance = 0.4 + random(i * 23) * 0.5;
+      const x = Math.cos(angle) * distance;
+      const y = Math.sin(angle) * distance;
+      const size = 0.12 + random(i * 31) * 0.20;
+      positions.push({ x, y, size });
+    }
     
     positions.forEach((pos, index) => {
       ctx.save();
       
-      // Position and gentle drift
-      const driftX = Math.sin(time * 0.001 + index * 0.7) * 0.05;
-      const driftY = Math.cos(time * 0.0008 + index * 1.2) * 0.03;
+      // Position with gentle drift - smaller drift for more Yin-Yangs
+      const driftX = Math.sin(time * 0.0008 + index * 0.5) * 0.03;
+      const driftY = Math.cos(time * 0.0006 + index * 0.8) * 0.025;
       ctx.translate((pos.x + driftX) * yinYangRadius, (pos.y + driftY) * yinYangRadius);
       
-      // Rotation at different speeds
-      const rotationSpeed = 0.002 + (index * 0.0005);
-      ctx.rotate(time * rotationSpeed + index * Math.PI / 3);
+      // Rotation at different speeds - varied more for visual interest
+      const rotationSpeed = 0.001 + (index * 0.0003) + random(index * 7) * 0.002;
+      ctx.rotate(time * rotationSpeed + index * Math.PI / 4);
       
       const miniRadius = yinYangRadius * pos.size;
-      const blend = 0.5 * (1 + Math.sin(time * 0.003 + index * 1.5));
-      const r1 = miniRadius * (0.3 + 0.4 * blend);
+      const blend = 0.5 * (1 + Math.sin(time * 0.002 + index * 1.2));
+      const r1 = miniRadius * (0.25 + 0.5 * blend);
       const r2 = miniRadius - r1;
       
       const colors = ANIMATION_CONFIG.compositeColors[index % ANIMATION_CONFIG.compositeColors.length];
-      this.drawBasic(blend, r1, r2, ctx, miniRadius, colors[0], colors[1]);
+      this.drawBasicNoClear(blend, r1, r2, ctx, miniRadius, colors[0], colors[1]);
       
       ctx.restore();
     });
