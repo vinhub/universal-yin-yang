@@ -50,7 +50,7 @@ const SECTION_DATA = [
   {
     canvasId: 'canvas-political',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'red', 'blue'),
-    title: '4. Example: Political Yin-Yang',
+    title: '4. Politics: A perfect example',
     type: 'complex',
     message: "Here's where it gets really interesting &#128522;—even in politics, the Yin-Yang principle shows up! " +
              "Different political viewpoints (represented here in red and blue) might seem like enemies, " +
@@ -70,7 +70,7 @@ const SECTION_DATA = [
   {
     canvasId: 'canvas-evolution',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: '6. Yin-Yangs can evolve',
+    title: '6. The relationships evolve',
     type: 'evolution',
     message: "Sometimes a Yin-Yang relationship can evolve into a different form. " +
              "In some cases, new relationships may appear, or existing ones may cease to exist. " +
