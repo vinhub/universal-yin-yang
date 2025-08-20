@@ -298,32 +298,27 @@ const YinYangDrawer = {
       return (x - Math.floor(x)); // Get fractional part for 0-1 range
     };
     
-    // Create more positions with varied sizes
+    // Create fewer positions but with much more varied sizes
     const positions = [
-      { x: 0, y: 0, size: 0.45 },                    // Center - large
-      { x: -0.65, y: -0.5, size: 0.28 },           // Top left
-      { x: 0.7, y: -0.35, size: 0.24 },            // Top right
-      { x: -0.45, y: 0.65, size: 0.32 },           // Bottom left
-      { x: 0.55, y: 0.7, size: 0.22 },             // Bottom right
-      { x: 0.8, y: 0.1, size: 0.18 },              // Right middle
-      { x: -0.8, y: 0.2, size: 0.20 },             // Left middle
-      { x: 0.3, y: -0.75, size: 0.19 },            // Top middle
-      { x: -0.2, y: -0.8, size: 0.21 },            // Top left-center
-      { x: 0.9, y: -0.6, size: 0.16 },             // Far top right
-      { x: -0.9, y: -0.3, size: 0.18 },            // Far left
-      { x: 0.2, y: 0.9, size: 0.23 },              // Bottom center
-      { x: -0.6, y: 0.3, size: 0.26 },             // Left-center
-      { x: 0.65, y: 0.3, size: 0.20 },             // Right-center
-      { x: -0.3, y: -0.2, size: 0.27 }             // Near center left
+      { x: 0, y: 0, size: 0.55 },                    // Center - very large
+      { x: -0.6, y: -0.4, size: 0.35 },            // Top left - large
+      { x: 0.7, y: -0.3, size: 0.12 },             // Top right - tiny
+      { x: -0.4, y: 0.6, size: 0.42 },             // Bottom left - very large
+      { x: 0.5, y: 0.7, size: 0.08 },              // Bottom right - very tiny
+      { x: 0.8, y: 0.1, size: 0.28 },              // Right middle - medium
+      { x: -0.8, y: 0.2, size: 0.15 },             // Left middle - small
+      { x: 0.2, y: -0.8, size: 0.38 },             // Top center - large
+      { x: -0.2, y: 0.3, size: 0.22 }              // Near center - medium-small
     ];
     
-    // Add some randomized positions for variety
-    for (let i = 0; i < 5; i++) {
+    // Add fewer randomized positions but with extreme size variation
+    for (let i = 0; i < 3; i++) {
       const angle = random(i * 17) * 2 * Math.PI;
-      const distance = 0.4 + random(i * 23) * 0.5;
+      const distance = 0.5 + random(i * 23) * 0.4;
       const x = Math.cos(angle) * distance;
       const y = Math.sin(angle) * distance;
-      const size = 0.12 + random(i * 31) * 0.20;
+      // Much wider size range: from very tiny to very large
+      const size = 0.06 + random(i * 31) * 0.45;
       positions.push({ x, y, size });
     }
     
