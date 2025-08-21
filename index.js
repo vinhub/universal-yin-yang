@@ -127,8 +127,8 @@ const YinYangDrawer = {
     return { dot1Radius, dot2Radius };
   },
 
-  drawBasic(blend, circle1Radius, circle2Radius, ctx, yinYangRadius, colorA, colorB) {
-    ctx.clearRect(-yinYangRadius * 2, -yinYangRadius * 2, yinYangRadius * 4, yinYangRadius * 4);
+  // Core Yin-Yang drawing method - all other methods build on this
+  _drawYinYangCore(ctx, circle1Radius, circle2Radius, yinYangRadius, colorA, colorB, includeDots = true) {
     ctx.save();
     ctx.rotate(Math.PI / 2);
     
@@ -147,56 +147,38 @@ const YinYangDrawer = {
     ctx.arc(0, 0, yinYangRadius, -Math.PI, 0);
     ctx.arc(circle2Radius, 0, circle1Radius, 0, Math.PI);
     ctx.arc(-circle1Radius, 0, circle2Radius, 0, -Math.PI, true);
-    ctx.arc(-circle1Radius, 0, dot1Radius, 0, 2 * Math.PI);
+    if (includeDots) {
+      ctx.arc(-circle1Radius, 0, dot1Radius, 0, 2 * Math.PI);
+    }
     ctx.closePath();
     ctx.fill();
     
-    // Draw dots
-    ctx.fillStyle = colorA;
-    ctx.beginPath();
-    ctx.arc(circle2Radius, 0, dot2Radius, 0, 2 * Math.PI);
-    ctx.closePath();
-    ctx.fill();
+    // Draw dots if requested
+    if (includeDots) {
+      ctx.fillStyle = colorA;
+      ctx.beginPath();
+      ctx.arc(circle2Radius, 0, dot2Radius, 0, 2 * Math.PI);
+      ctx.closePath();
+      ctx.fill();
+    }
     
     ctx.restore();
+    return { dot1Radius, dot2Radius };
+  },
+
+  drawBasic(blend, circle1Radius, circle2Radius, ctx, yinYangRadius, colorA, colorB) {
+    ctx.clearRect(-yinYangRadius * 2, -yinYangRadius * 2, yinYangRadius * 4, yinYangRadius * 4);
+    this._drawYinYangCore(ctx, circle1Radius, circle2Radius, yinYangRadius, colorA, colorB);
   },
 
   drawBasicNoClear(blend, circle1Radius, circle2Radius, ctx, yinYangRadius, colorA, colorB) {
-    // Same as drawBasic but without clearRect
-    ctx.save();
-    ctx.rotate(Math.PI / 2);
-    
-    const { dot1Radius, dot2Radius } = this.calculateDotRadii(circle1Radius, circle2Radius);
-    
-    // Draw main Yin-Yang shape
-    ctx.fillStyle = colorA;
-    ctx.beginPath();
-    ctx.arc(0, 0, yinYangRadius, 0, Math.PI);
-    ctx.arc(-circle1Radius, 0, circle2Radius, Math.PI, 0);
-    ctx.closePath();
-    ctx.fill();
-    
-    ctx.fillStyle = colorB;
-    ctx.beginPath();
-    ctx.arc(0, 0, yinYangRadius, -Math.PI, 0);
-    ctx.arc(circle2Radius, 0, circle1Radius, 0, Math.PI);
-    ctx.arc(-circle1Radius, 0, circle2Radius, 0, -Math.PI, true);
-    ctx.arc(-circle1Radius, 0, dot1Radius, 0, 2 * Math.PI);
-    ctx.closePath();
-    ctx.fill();
-    
-    // Draw dots
-    ctx.fillStyle = colorA;
-    ctx.beginPath();
-    ctx.arc(circle2Radius, 0, dot2Radius, 0, 2 * Math.PI);
-    ctx.closePath();
-    ctx.fill();
-    
-    ctx.restore();
+    this._drawYinYangCore(ctx, circle1Radius, circle2Radius, yinYangRadius, colorA, colorB);
   },
 
   drawFractal(blend, circle1Radius, circle2Radius, ctx, yinYangRadius, colorA, colorB, time) {
     ctx.clearRect(-yinYangRadius * 2, -yinYangRadius * 2, yinYangRadius * 4, yinYangRadius * 4);
+    
+    // Draw main body without dots manually (without using _drawYinYangCore to avoid double rotation)
     ctx.save();
     ctx.rotate(Math.PI / 2);
     
@@ -218,71 +200,43 @@ const YinYangDrawer = {
     ctx.closePath();
     ctx.fill();
     
-    // Draw fractal Yin-Yangs instead of dots
+    // Draw fractal Yin-Yangs instead of dots - positioned in rotated coordinate system
     const fractalBlend1 = 0.5 * (1 + Math.sin(time * ANIMATION_CONFIG.fractalSpeed1));
     const fractalBlend2 = 0.5 * (1 + Math.sin(time * ANIMATION_CONFIG.fractalSpeed2 + Math.PI));
     
-    // First fractal Yin-Yang (in the white section)
-    if (dot1Radius > 0) {
-      ctx.save();
-      ctx.translate(-circle1Radius, 0);
-      const fractalR1_1 = dot1Radius * 0.4 * fractalBlend1 + dot1Radius * 0.1 * (1 - fractalBlend1);
-      const fractalR1_2 = dot1Radius - fractalR1_1;
-      this.drawMini(fractalBlend1, fractalR1_1, fractalR1_2, ctx, dot1Radius, colorB, colorA);
-      ctx.restore();
-    }
-    
-    // Second fractal Yin-Yang (in the black section)
-    if (dot2Radius > 0) {
-      ctx.save();
-      ctx.translate(circle2Radius, 0);
-      const fractalR2_1 = dot2Radius * 0.4 * fractalBlend2 + dot2Radius * 0.1 * (1 - fractalBlend2);
-      const fractalR2_2 = dot2Radius - fractalR2_1;
-      this.drawMini(fractalBlend2, fractalR2_1, fractalR2_2, ctx, dot2Radius, colorA, colorB);
-      ctx.restore();
-    }
+    // Position fractal Yin-Yangs at dot locations in the rotated coordinate system
+    this._drawFractalYinYang(ctx, -circle1Radius, 0, dot1Radius, fractalBlend1, colorB, colorA);
+    this._drawFractalYinYang(ctx, circle2Radius, 0, dot2Radius, fractalBlend2, colorA, colorB);
     
     ctx.restore();
   },
 
-  drawMini(blend, circle1Radius, circle2Radius, ctx, yinYangRadius, colorA, colorB) {
+  _drawFractalYinYang(ctx, x, y, radius, blend, colorA, colorB) {
+    if (radius <= 0) return;
+    
     ctx.save();
-    ctx.rotate(Math.PI / 2);
+    ctx.translate(x, y);
+    const fractalR1 = radius * (0.4 * blend + 0.1 * (1 - blend));
+    const fractalR2 = radius - fractalR1;
+    this.drawMini(blend, fractalR1, fractalR2, ctx, radius, colorA, colorB);
+    ctx.restore();
+  },
+
+  drawMini(blend, circle1Radius, circle2Radius, ctx, yinYangRadius, colorA, colorB) {
+    // Calculate mini dot sizes (simpler calculation for mini version)
+    const dot1Radius = circle2Radius / 4;
+    const dot2Radius = circle1Radius / 4;
     
-    // Calculate mini dot sizes (keep them as regular dots to avoid infinite recursion)
-    let dot1Radius = circle2Radius / 4;
-    let dot2Radius = circle1Radius / 4;
+    // Use core drawing method
+    this._drawYinYangCore(ctx, circle1Radius, circle2Radius, yinYangRadius, colorA, colorB);
     
-    // Draw mini Yin-Yang body
-    ctx.fillStyle = colorA;
-    ctx.beginPath();
-    ctx.arc(0, 0, yinYangRadius, 0, Math.PI);
-    ctx.arc(-circle1Radius, 0, circle2Radius, Math.PI, 0);
-    ctx.closePath();
-    ctx.fill();
-    
-    ctx.fillStyle = colorB;
-    ctx.beginPath();
-    ctx.arc(0, 0, yinYangRadius, -Math.PI, 0);
-    ctx.arc(circle2Radius, 0, circle1Radius, 0, Math.PI);
-    ctx.arc(-circle1Radius, 0, circle2Radius, 0, -Math.PI, true);
-    ctx.arc(-circle1Radius, 0, dot1Radius, 0, 2 * Math.PI);
-    ctx.closePath();
-    ctx.fill();
-    
-    ctx.fillStyle = colorA;
-    ctx.beginPath();
-    ctx.arc(circle2Radius, 0, dot2Radius, 0, 2 * Math.PI);
-    ctx.closePath();
-    ctx.fill();
-    
-    // Draw circular border around the mini Yin-Yang
+    // Add border for mini Yin-Yangs
+    ctx.save();
     ctx.strokeStyle = colorA === 'black' ? 'black' : 'white';
     ctx.lineWidth = yinYangRadius * ANIMATION_CONFIG.borderWidth;
     ctx.beginPath();
     ctx.arc(0, 0, yinYangRadius, 0, 2 * Math.PI);
     ctx.stroke();
-    
     ctx.restore();
   },
 
@@ -349,6 +303,83 @@ const EvolutionDrawer = {
       ctx.restore();
     }
     ctx.restore();
+  },
+
+  drawComposite(ctx, yinYangRadius, time) {
+    ctx.clearRect(-yinYangRadius * 2, -yinYangRadius * 2, yinYangRadius * 4, yinYangRadius * 4);
+    
+    const positions = this._generateCompositePositions();
+    positions.forEach((pos, index) => this._drawCompositeYinYang(ctx, pos, index, yinYangRadius, time));
+  },
+
+  _generateCompositePositions() {
+    return [
+      { x: 0, y: 0, size: 0.40, colors: ['black', 'white'] },      // Center
+      // Inner ring
+      { x: -0.75, y: 0, size: 0.20, colors: ['darkblue', 'lightblue'] },
+      { x: 0.75, y: 0, size: 0.20, colors: ['darkgreen', 'lightgreen'] },
+      { x: 0, y: -0.75, size: 0.20, colors: ['purple', 'lavender'] },
+      { x: 0, y: 0.75, size: 0.20, colors: ['brown', 'wheat'] },
+      // Outer ring
+      { x: -0.80, y: -0.65, size: 0.20, colors: ['navy', 'gold'] },
+      { x: 0.80, y: -0.65, size: 0.20, colors: ['maroon', 'pink'] },
+      { x: 0.80, y: 0.65, size: 0.20, colors: ['darkred', 'orange'] },
+      { x: -0.80, y: 0.65, size: 0.20, colors: ['indigo', 'silver'] }
+    ];
+  },
+
+  _drawCompositeYinYang(ctx, pos, index, yinYangRadius, time) {
+    ctx.save();
+    
+    // Position with gentle drift
+    const driftX = Math.sin(time * 0.0008 + index * 0.5) * 0.03;
+    const driftY = Math.cos(time * 0.0006 + index * 0.8) * 0.025;
+    ctx.translate((pos.x + driftX) * yinYangRadius, (pos.y + driftY) * yinYangRadius);
+    
+    // Rotation
+    const rotationSpeed = 0.001 + (index * 0.0003);
+    ctx.rotate(time * rotationSpeed + index * Math.PI / 4);
+    
+    const miniRadius = yinYangRadius * pos.size;
+    const blend = 0.5 * (1 + Math.sin(time * 0.002 + index * 1.2));
+    const r1 = miniRadius * (0.25 + 0.5 * blend);
+    const r2 = miniRadius - r1;
+    
+    this.drawBasicNoClear(blend, r1, r2, ctx, miniRadius, pos.colors[0], pos.colors[1]);
+    ctx.restore();
+  }
+};
+
+// ============================
+// ANIMATION UTILITIES MODULE
+// ============================
+
+const AnimationUtils = {
+  // Common animation calculations
+  calculateBlend(time, speed = ANIMATION_CONFIG.angleStep) {
+    return 0.5 * (1 + Math.sin(time * speed));
+  },
+
+  calculateRadii(yinYangRadius, minFactor, radiusFactor, blend) {
+    const minRadius = minFactor * 0.5 * yinYangRadius * (1 - radiusFactor);
+    const maxRadius = (yinYangRadius * (1 - radiusFactor)) - minRadius;
+    const circle1Radius = blend * minRadius + (1 - blend) * maxRadius;
+    const circle2Radius = (yinYangRadius * (1 - radiusFactor)) - circle1Radius;
+    return { circle1Radius, circle2Radius };
+  },
+
+  shouldUpdateMinFactor(blend, threshold = 0.001) {
+    return Math.abs(blend - 0.5) < threshold;
+  },
+
+  setupCanvas(canvas) {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = canvas.height = Math.round(rect.width);
+    const yinYangRadius = 0.5 * canvas.width;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.translate(yinYangRadius, yinYangRadius);
+    return { ctx, yinYangRadius };
   }
 };
 
@@ -361,7 +392,6 @@ const AnimationController = {
   animationFrameId: null,
 
   animateSection(sectionIdx, time = 0) {
-    // Cancel previous animation if running
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
@@ -369,48 +399,28 @@ const AnimationController = {
     
     const section = SECTION_DATA[sectionIdx];
     const canvas = document.getElementById(section.canvasId);
-    const ctx = canvas.getContext('2d');
     let minFactor = ANIMATION_CONFIG.minFactor;
-    let yinYangRadius;
     let radiusFactor = 0;
 
-    function resizeCanvas() {
-      canvas.width = canvas.height = Math.round(canvas.getBoundingClientRect().width);
-      yinYangRadius = 0.5 * canvas.width;
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.translate(yinYangRadius, yinYangRadius);
-    }
-    
-    resizeCanvas();
+    const { ctx, yinYangRadius } = AnimationUtils.setupCanvas(canvas);
     
     if (section.type === 'static') {
-      // Draw static Yin-Yang
       section.draw(0.5, yinYangRadius * 0.75, yinYangRadius * 0.25, ctx, yinYangRadius);
       return;
     }
 
     const frame = (t) => {
-      const blend = 0.5 * (1 + Math.sin(t * ANIMATION_CONFIG.angleStep));
+      const blend = AnimationUtils.calculateBlend(t);
       
-      if (section.type === 'complex' && (Math.abs(blend - 0.5) < 0.001)) {
+      if (section.type === 'complex' && AnimationUtils.shouldUpdateMinFactor(blend)) {
         minFactor = Math.random();
       }
 
-      const minRadius = minFactor * 0.5 * yinYangRadius * (1 - radiusFactor);
-      const maxRadius = (yinYangRadius * (1 - radiusFactor)) - minRadius;
-      const circle1Radius = blend * minRadius + (1 - blend) * maxRadius;
-      const circle2Radius = (yinYangRadius * (1 - radiusFactor)) - circle1Radius;
+      const { circle1Radius, circle2Radius } = AnimationUtils.calculateRadii(yinYangRadius, minFactor, radiusFactor, blend);
 
-      if (section.type === 'fractal') {
-        YinYangDrawer.drawFractal(blend, circle1Radius, circle2Radius, ctx, yinYangRadius * (1 - radiusFactor), 'black', 'white', t);
-      } else if (section.type === 'composite') {
-        YinYangDrawer.drawComposite(ctx, yinYangRadius, t);
-      } else {
-        section.draw(blend, circle1Radius, circle2Radius, ctx, yinYangRadius * (1 - radiusFactor));
-      }
+      this._renderFrame(section, ctx, yinYangRadius, radiusFactor, blend, circle1Radius, circle2Radius, t);
 
       if (section.type === 'evolution') {
-        // Shrink yinyang and expand flower
         radiusFactor += Math.cosh(blend) * ANIMATION_CONFIG.evolutionSpeed;
         if (radiusFactor > 1) return;
         EvolutionDrawer.drawFlower(ctx, yinYangRadius * radiusFactor);
@@ -420,7 +430,22 @@ const AnimationController = {
     };
     
     frame(time);
-    window.addEventListener('resize', resizeCanvas, false);
+    window.addEventListener('resize', () => AnimationUtils.setupCanvas(canvas), false);
+  },
+
+  _renderFrame(section, ctx, yinYangRadius, radiusFactor, blend, circle1Radius, circle2Radius, time) {
+    const adjustedRadius = yinYangRadius * (1 - radiusFactor);
+    
+    switch (section.type) {
+      case 'fractal':
+        YinYangDrawer.drawFractal(blend, circle1Radius, circle2Radius, ctx, adjustedRadius, 'black', 'white', time);
+        break;
+      case 'composite':
+        YinYangDrawer.drawComposite(ctx, yinYangRadius, time);
+        break;
+      default:
+        section.draw(blend, circle1Radius, circle2Radius, ctx, adjustedRadius);
+    }
   }
 };
 
