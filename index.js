@@ -290,56 +290,38 @@ const YinYangDrawer = {
     // Clear the entire canvas once at the beginning
     ctx.clearRect(-yinYangRadius * 2, -yinYangRadius * 2, yinYangRadius * 4, yinYangRadius * 4);
     
-    // Generate randomized positions for more Yin-Yangs
-    // Use time-based seed for consistent but changing positions
-    const seed = Math.floor(time * 0.0001) * 12345;
-    const random = (index) => {
-      const x = Math.sin(seed + index * 123.456);
-      return (x - Math.floor(x)); // Get fractional part for 0-1 range
-    };
-    
     // Create fewer positions but with much more varied sizes - keep within bounds
     const positions = [
-      { x: 0, y: 0, size: 0.35 },                    // Center - very large
-      { x: -0.65, y: -0.65, size: 0.25 },          // Top left - large (adjusted for size)
-      { x: 0.85, y: -0.65, size: 0.15 },           // Top right - small (adjusted for size)
-      { x: -0.68, y: 0.68, size: 0.32 },           // Bottom left - very large (adjusted for size)
-      { x: 0.86, y: 0.86, size: 0.14 },            // Bottom right - small (adjusted for size)
-      { x: 0.82, y: 0.1, size: 0.18 },             // Far right middle - medium (adjusted for size)
-      { x: -0.84, y: 0.3, size: 0.16 },            // Far left middle - small (adjusted for size)
-      { x: 0.3, y: -0.72, size: 0.28 },            // Top edge - large (adjusted for size)
-      { x: -0.3, y: 0.4, size: 0.15 }              // Near center - medium-small
+      { x: 0, y: 0, size: 0.50, colors: ['darkblue', 'lightblue'] },
+      
+      // Inner ring - like planets around the sun (spread out to avoid overlap)
+      { x: -0.75, y: 0, size: 0.20, colors: ['darkgreen', 'lightgreen'] },
+      { x: 0.75, y: 0, size: 0.20, colors: ['darkgreen', 'lightgreen'] },
+      { x: 0, y: -0.75, size: 0.20, colors: ['darkgreen', 'lightgreen'] },
+      { x: 0, y: 0.75, size: 0.20, colors: ['darkgreen', 'lightgreen'] },
+      
+      // Outer ring - like a constellation or flower petals (same size as inner ring)
+      { x: -0.75, y: -0.75, size: 0.20, colors: ['maroon', 'pink'] },
+      { x: 0.75, y: -0.75, size: 0.20, colors: ['maroon', 'pink'] },
+      { x: 0.75, y: 0.75, size: 0.20, colors: ['maroon', 'pink'] },
+      { x: -0.75, y: 0.75, size: 0.20, colors: ['maroon', 'pink'] }
     ];
     
-    // Add fewer randomized positions but with extreme size variation - keep within bounds
-    for (let i = 0; i < 3; i++) {
-      // Generate size first, then adjust position range based on size
-      const size = 0.10 + random(i * 31) * 0.24;
-      const maxPos = 1.0 - size; // Ensure the edge of the Yin-Yang doesn't go beyond bounds
-      const x = (random(i * 13) - 0.5) * 2 * maxPos;
-      const y = (random(i * 19) - 0.5) * 2 * maxPos;
-      positions.push({ x, y, size });
-    }
+    // No random or edge positions - using the natural pattern above
     
     positions.forEach((pos, index) => {
-      ctx.save();
+      ctx.save();      
+      ctx.translate((pos.x) * yinYangRadius, (pos.y) * yinYangRadius);
       
-      // Position with gentle drift - use yinYangRadius as the scale
-      const driftX = Math.sin(time * 0.0008 + index * 0.5) * 0.03;
-      const driftY = Math.cos(time * 0.0006 + index * 0.8) * 0.025;
-      ctx.translate((pos.x + driftX) * yinYangRadius, (pos.y + driftY) * yinYangRadius);
-      
-      // Rotation at different speeds - varied more for visual interest
-      const rotationSpeed = 0.001 + (index * 0.0003) + random(index * 7) * 0.002;
-      ctx.rotate(time * rotationSpeed + index * Math.PI / 4);
+      ctx.rotate(time * 0.01);
       
       const miniRadius = yinYangRadius * pos.size;
       const blend = 0.5 * (1 + Math.sin(time * 0.002 + index * 1.2));
       const r1 = miniRadius * (0.25 + 0.5 * blend);
       const r2 = miniRadius - r1;
       
-      // Use only black and white colors for all Yin-Yangs in composite section
-      this.drawBasicNoClear(blend, r1, r2, ctx, miniRadius, 'black', 'white');
+      // Use the colors specified for each position
+      this.drawBasicNoClear(blend, r1, r2, ctx, miniRadius, pos.colors[0], pos.colors[1]);
       
       ctx.restore();
     });
