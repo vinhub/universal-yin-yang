@@ -108,6 +108,8 @@ canvas {
     flex-direction: column;
     height: calc(100vh - 48px);
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
   
   canvas {
@@ -139,6 +141,8 @@ canvas {
     flex-direction: column;
     overflow-y: auto;
     height: calc(100vh - 48px);
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
   /* Mobile vertical: Yin-Yang below title bar, message panel fills rest */
   canvas {
@@ -294,7 +298,17 @@ body {
   align-items: center;
   overflow: hidden;
   height: 100vh;
- background: linear-gradient(135deg, #fff6e0 0%, #ffd6c0 50%, #ffb085 100%);
+  background: linear-gradient(135deg, #fff6e0 0%, #ffd6c0 50%, #ffb085 100%);
+  /* iOS scrolling fixes */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Enable scrolling on mobile devices */
+@media (max-width: 900px) {
+  body {
+    overflow: visible;
+  }
 }
 
 .yin-arrow {
