@@ -460,6 +460,12 @@ const NavigationController = {
       document.getElementById(`arrow-left-${i}`).disabled = (idx === 0);
       document.getElementById(`arrow-right-${i}`).disabled = (idx === SECTION_DATA.length - 1);
     });
+    
+    // Update carousel indicators
+    document.querySelectorAll('.indicator').forEach((indicator, i) => {
+      indicator.classList.toggle('active', i === idx);
+    });
+    
     document.getElementById('page-title').textContent = SECTION_DATA[idx].title;
     AnimationController.animateSection(idx);
     // Show message panel with section message immediately
@@ -469,6 +475,7 @@ const NavigationController = {
   },
 
   initializeNavigation() {
+    // Setup arrow buttons
     for (let i = 0; i < SECTION_DATA.length; i++) {
       document.getElementById(`arrow-left-${i}`).addEventListener('click', () => {
         if (AnimationController.currentSection > 0) {
@@ -483,6 +490,59 @@ const NavigationController = {
         }
       });
     }
+    
+    // Setup carousel indicators
+    document.querySelectorAll('.indicator').forEach((indicator, index) => {
+      indicator.addEventListener('click', () => {
+        AnimationController.currentSection = index;
+        this.showSection(index);
+      });
+    });
+    
+    // Setup swipe gestures
+    this.initializeSwipeGestures();
+  },
+
+  initializeSwipeGestures() {
+    let startX = 0;
+    let startY = 0;
+    let endX = 0;
+    let endY = 0;
+    
+    const minSwipeDistance = 50;
+    const maxVerticalDistance = 100;
+    
+    const mainWrapper = document.getElementById('main-content-wrapper');
+    
+    mainWrapper.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, { passive: true });
+    
+    mainWrapper.addEventListener('touchend', (e) => {
+      endX = e.changedTouches[0].clientX;
+      endY = e.changedTouches[0].clientY;
+      
+      const deltaX = endX - startX;
+      const deltaY = Math.abs(endY - startY);
+      
+      // Only process horizontal swipes (not vertical scrolling)
+      if (Math.abs(deltaX) > minSwipeDistance && deltaY < maxVerticalDistance) {
+        if (deltaX > 0) {
+          // Swipe right - go to previous section
+          if (AnimationController.currentSection > 0) {
+            AnimationController.currentSection--;
+            this.showSection(AnimationController.currentSection);
+          }
+        } else {
+          // Swipe left - go to next section
+          if (AnimationController.currentSection < SECTION_DATA.length - 1) {
+            AnimationController.currentSection++;
+            this.showSection(AnimationController.currentSection);
+          }
+        }
+      }
+    }, { passive: true });
   }
 };
 

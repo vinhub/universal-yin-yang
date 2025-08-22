@@ -39,6 +39,38 @@ canvas {
 #canvas-everywhere {
   border-radius: 12px;
 }
+
+/* Carousel indicators */
+#carousel-indicators {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.indicator:hover {
+  background-color: rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: scale(1.1);
+}
+
+.indicator.active {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 1);
+  transform: scale(1.2);
+}
+
 #nav-buttons {
   position: absolute;
   bottom: 32px;
@@ -121,7 +153,7 @@ canvas {
   
   #message-panel {
     width: min(90vw, 600px);
-    margin: 0 20px;
+    margin: 0 20px 20px 20px;
     padding: 25px;
     font-size: 1.1em;
     flex-shrink: 0;
@@ -176,7 +208,7 @@ canvas {
     border-radius: 16px;
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
-    margin: 0 auto;
+    margin: 0 auto 20px auto;
   }
 }
 
@@ -371,5 +403,78 @@ body {
   .yin-arrow svg {
     width: 20px;
     height: 20px;
+  }
+}
+
+/* Carousel indicators - positioned below the canvas */
+#carousel-indicators {
+  position: absolute;
+  top: calc(50vh + 35vmin); /* Position below the canvas, using vh to center relative to canvas */
+  left: 50vw; /* Center horizontally relative to viewport width */
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.indicator.active {
+  background: rgba(255, 184, 133, 0.9);
+  border: 2px solid #ff8c42;
+  width: 16px;
+  height: 16px;
+  box-shadow: 0 2px 8px rgba(255, 140, 66, 0.3);
+}
+
+.indicator:hover {
+  background: rgba(255, 184, 133, 0.6);
+  border: 2px solid rgba(255, 140, 66, 0.8);
+  transform: scale(1.1);
+}
+
+@media (max-width: 900px) {
+  #carousel-indicators {
+    position: static; /* Change from absolute to static positioning */
+    transform: none; /* Remove transform since we're not using absolute positioning */
+    margin: 20px auto; /* Center horizontally and add vertical spacing */
+    order: 2; /* Place between canvas (order 1) and message panel (order 3) */
+    gap: 10px;
+  }
+  
+  .yin-yang-section {
+    order: 1; /* Canvas section first */
+  }
+  
+  #message-panel {
+    order: 3; /* Message panel last */
+  }
+}
+
+@media (max-width: 600px) {
+  #carousel-indicators {
+    gap: 8px; /* Smaller gap for mobile */
+  }
+  
+  .indicator {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .indicator.active {
+    width: 14px;
+    height: 14px;
   }
 }
