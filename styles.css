@@ -142,6 +142,9 @@ canvas {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+    overscroll-behavior-y: none;
+    -webkit-overscroll-behavior: none;
+    -webkit-overscroll-behavior-y: none;
   }
   
   canvas {
@@ -175,6 +178,9 @@ canvas {
     height: calc(100vh - 48px);
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+    overscroll-behavior-y: none;
+    -webkit-overscroll-behavior: none;
+    -webkit-overscroll-behavior-y: none;
   }
   /* Mobile vertical: Yin-Yang below title bar, message panel fills rest */
   canvas {
