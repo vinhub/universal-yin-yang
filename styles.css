@@ -3,7 +3,7 @@
   position: absolute;
   top: 48px;
   width: 100vw;
-  height: calc(100vh - 48px);
+  height: calc(100dvh - 48px);
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -138,7 +138,7 @@ canvas {
 @media (max-width: 900px) and (min-width: 601px) {
   #main-content-wrapper {
     flex-direction: column;
-    height: calc(100vh - 48px);
+    height: calc(100dvh - 48px);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
@@ -175,7 +175,7 @@ canvas {
   #main-content-wrapper {
     flex-direction: column;
     overflow-y: auto;
-    height: calc(100vh - 48px);
+    height: calc(100dvh - 48px);
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     overscroll-behavior-y: none;
