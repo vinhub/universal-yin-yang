@@ -218,46 +218,6 @@ canvas {
   }
 }
 
-/* Dropdown menu styles */
-.menu-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: 64px;
-  right: 0;
-  background: linear-gradient(135deg, #fff6e0 0%, #ffd6c0 100%);
-  color: #d97706;
-  min-width: 160px;
-  box-shadow: 0 4px 16px rgba(255, 184, 133, 0.15);
-  border-radius: 18px;
-  border: 2px solid #ffe5b9;
-  padding: 8px 0;
-  display: none;
-  flex-direction: column;
-  z-index: 100;
-}
-
-.dropdown-menu.open {
-  display: flex;
-}
-
-.dropdown-item {
-  padding: 14px 28px;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-  font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
-  font-weight: 500;
-  color: #d97706;
-  border-radius: 12px;
-}
-.dropdown-item:hover {
-  background: #ffd6c0;
-  color: #a85c00;
-}
 /* Title bar styles */
 #title-bar {
   width: 100vw;
@@ -285,48 +245,57 @@ canvas {
   align-self: center;
 }
 
-/* Menu button styles */
-#menu-button {
+/* Narrator button styles */
+#narrator-button {
   background: none;
   border: none;
-  padding: 0;
+  padding: 8px;
   margin-left: 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
 }
 
-#menu-button svg {
+#narrator-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+#narrator-button.speaking {
+  background: rgba(255, 140, 66, 0.2);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+#narrator-button svg {
   display: block;
   width: 24px;
   height: 24px;
-  /* Match title color */
   color: #c75a0a;
 }
 
-#menu-button svg rect {
+#narrator-button svg path {
   fill: currentColor;
 }
 
 @media (max-width: 600px) {
   #title-bar {
     align-items: stretch;
-    }
-  .menu-wrapper {
+  }
+  #narrator-button {
     position: absolute;
     right: 12px;
     top: 4px;
   }
-  .dropdown-menu {
-    top: 72px;
-  }
   #page-title {
     font-size: 1.2em;
-  }
-  #menu-button {
-    margin-left: 0;
-    margin-top: 8px;
   }
 }
 

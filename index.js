@@ -455,6 +455,11 @@ const AnimationController = {
 
 const NavigationController = {
   showSection(idx) {
+    // Stop any ongoing narration when switching sections
+    if (NarratorController.isSpeaking) {
+      NarratorController.stopNarration();
+    }
+    
     SECTION_DATA.forEach((_, i) => {
       document.getElementById('section-' + i).style.display = (i === idx) ? 'flex' : 'none';
       document.getElementById(`arrow-left-${i}`).disabled = (idx === 0);
@@ -547,37 +552,161 @@ const NavigationController = {
 };
 
 // ============================
-// MENU CONTROLLER MODULE
+// NARRATOR CONTROLLER MODULE
 // ============================
 
-const MenuController = {
+const NarratorController = {
+  isSupported: 'speechSynthesis' in window,
+  isSpeaking: false,
+  currentUtterance: null,
+
   initialize() {
-    document.addEventListener('DOMContentLoaded', function() {
-      const menuButton = document.getElementById('menu-button');
-      const dropdownMenu = document.getElementById('dropdown-menu');
-
-      function closeMenu() {
-        dropdownMenu.classList.remove('open');
+    if (!this.isSupported) {
+      console.warn('Speech synthesis not supported in this browser');
+      const narratorButton = document.getElementById('narrator-button');
+      if (narratorButton) {
+        narratorButton.style.display = 'none';
       }
+      return;
+    }
 
-      menuButton.addEventListener('click', function(e) {
-        e.stopPropagation();
-        dropdownMenu.classList.toggle('open');
+    // Load voices (they may not be immediately available)
+    if (speechSynthesis.getVoices().length === 0) {
+      speechSynthesis.addEventListener('voiceschanged', () => {
+        console.log('Available voices:', speechSynthesis.getVoices().map(v => v.name));
       });
+    } else {
+      console.log('Available voices:', speechSynthesis.getVoices().map(v => v.name));
+    }
 
-      document.addEventListener('click', function(e) {
-        if (dropdownMenu.classList.contains('open')) {
-          closeMenu();
-        }
-      });
+    const narratorButton = document.getElementById('narrator-button');
+    if (narratorButton) {
+      narratorButton.addEventListener('click', () => this.toggleNarration());
+    }
+  },
 
-      dropdownMenu.addEventListener('click', function(e) {
-        e.stopPropagation(); // Prevent closing when clicking inside menu
-        if (e.target.classList.contains('dropdown-item')) {
-          closeMenu();
-        }
-      });
-    });
+  toggleNarration() {
+    if (this.isSpeaking) {
+      this.stopNarration();
+    } else {
+      this.startNarration();
+    }
+  },
+
+  startNarration() {
+    const messagePanel = document.getElementById('message-panel');
+    if (!messagePanel || !messagePanel.textContent.trim()) {
+      return;
+    }
+
+    // Clean up HTML tags and get plain text
+    const textToRead = messagePanel.textContent.replace(/\s+/g, ' ').trim();
+    
+    if (!textToRead) return;
+
+    // Stop any existing speech
+    speechSynthesis.cancel();
+
+    // Create new utterance
+    this.currentUtterance = new SpeechSynthesisUtterance(textToRead);
+    
+    // Select a better voice if available
+    const voices = speechSynthesis.getVoices();
+    let selectedVoice = null;
+    
+    // Prefer these voice names in order of preference
+    const preferredVoices = [
+      // High quality English voices
+      'Samantha', 'Alex', 'Victoria', 'Daniel', 'Karen', 'Moira', 'Tessa',
+      // Google voices
+      'Google US English', 'Google UK English Female', 'Google UK English Male',
+      // Microsoft voices
+      'Microsoft Zira - English (United States)', 'Microsoft David - English (United States)',
+      'Microsoft Mark - English (United States)', 'Microsoft Hazel - English (Great Britain)',
+      // Safari/WebKit voices
+      'Ava', 'Samantha', 'Tom', 'Susan'
+    ];
+    
+    // Try to find a preferred voice
+    for (const voiceName of preferredVoices) {
+      selectedVoice = voices.find(voice => 
+        voice.name.toLowerCase().includes(voiceName.toLowerCase()) && 
+        voice.lang.startsWith('en')
+      );
+      if (selectedVoice) break;
+    }
+    
+    // Fallback to any high-quality English voice
+    if (!selectedVoice) {
+      selectedVoice = voices.find(voice => 
+        voice.lang.startsWith('en') && 
+        (voice.name.includes('Premium') || voice.name.includes('Enhanced') || voice.localService === true)
+      );
+    }
+    
+    // Final fallback to any English voice
+    if (!selectedVoice) {
+      selectedVoice = voices.find(voice => voice.lang.startsWith('en'));
+    }
+    
+    if (selectedVoice) {
+      this.currentUtterance.voice = selectedVoice;
+      console.log('Selected voice:', selectedVoice.name);
+    }
+    
+    // Configure voice settings for more natural speech
+    this.currentUtterance.rate = 0.85;  // Slightly slower for better comprehension
+    this.currentUtterance.pitch = 1.1;  // Slightly higher pitch for warmth
+    this.currentUtterance.volume = 0.9; // Higher volume for clarity
+
+    // Set up event listeners
+    this.currentUtterance.onstart = () => {
+      this.isSpeaking = true;
+      this.updateButtonState();
+    };
+
+    this.currentUtterance.onend = () => {
+      this.isSpeaking = false;
+      this.updateButtonState();
+    };
+
+    this.currentUtterance.onerror = () => {
+      this.isSpeaking = false;
+      this.updateButtonState();
+    };
+
+    // Start speaking
+    speechSynthesis.speak(this.currentUtterance);
+  },
+
+  stopNarration() {
+    speechSynthesis.cancel();
+    this.isSpeaking = false;
+    this.updateButtonState();
+  },
+
+  updateButtonState() {
+    const narratorButton = document.getElementById('narrator-button');
+    if (narratorButton) {
+      if (this.isSpeaking) {
+        narratorButton.classList.add('speaking');
+        narratorButton.setAttribute('aria-label', 'Stop narrator');
+        narratorButton.setAttribute('title', 'Stop reading');
+      } else {
+        narratorButton.classList.remove('speaking');
+        narratorButton.setAttribute('aria-label', 'Toggle narrator');
+        narratorButton.setAttribute('title', 'Read message aloud');
+      }
+    }
+  },
+
+  // Auto-start narration when section changes (optional)
+  narrateCurrentSection() {
+    if (this.isSpeaking) {
+      this.stopNarration();
+      // Small delay to ensure previous speech is fully stopped
+      setTimeout(() => this.startNarration(), 100);
+    }
   }
 };
 
@@ -588,4 +717,4 @@ const MenuController = {
 // Initialize the application
 NavigationController.initializeNavigation();
 NavigationController.showSection(AnimationController.currentSection);
-MenuController.initialize();
+NarratorController.initialize();
