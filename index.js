@@ -455,8 +455,8 @@ const AnimationController = {
 
 const NavigationController = {
   showSection(idx) {
-    // Stop any ongoing narration when switching sections
-    if (NarratorController.isSpeaking) {
+    // Stop any ongoing narration (both audio and TTS) when switching sections
+    if (NarratorController.isPlaying) {
       NarratorController.stopNarration();
     }
     
@@ -552,41 +552,45 @@ const NavigationController = {
 };
 
 // ============================
-// NARRATOR CONTROLLER MODULE
+// AUDIO NARRATOR CONTROLLER MODULE
 // ============================
 
 const NarratorController = {
-  isSupported: 'speechSynthesis' in window,
-  isSpeaking: false,
-  currentUtterance: null,
+  currentAudio: null,
+  isPlaying: false,
+  isUsingTTS: false,
+  audioFiles: {
+    0: 'audio/section-1.mp3', // Classic Yin-Yang
+    1: 'audio/section-2.mp3', // Dynamic Yin-Yang
+    2: 'audio/section-3.mp3', // Evolution
+    3: 'audio/section-4.mp3', // Flower
+    4: 'audio/section-5.mp3', // Fractal
+    5: 'audio/section-6.mp3', // Modular
+    6: 'audio/section-7.mp3'  // Composite
+  },
 
   initialize() {
-    if (!this.isSupported) {
-      console.warn('Speech synthesis not supported in this browser');
-      const narratorButton = document.getElementById('narrator-button');
-      if (narratorButton) {
-        narratorButton.style.display = 'none';
-      }
-      return;
-    }
-
-    // Load voices (they may not be immediately available)
-    if (speechSynthesis.getVoices().length === 0) {
-      speechSynthesis.addEventListener('voiceschanged', () => {
-        console.log('Available voices:', speechSynthesis.getVoices().map(v => v.name));
-      });
-    } else {
-      console.log('Available voices:', speechSynthesis.getVoices().map(v => v.name));
-    }
-
     const narratorButton = document.getElementById('narrator-button');
     if (narratorButton) {
       narratorButton.addEventListener('click', () => this.toggleNarration());
     }
+    
+    // Preload all audio files for better performance
+    this.preloadAudio();
+  },
+
+  preloadAudio() {
+    Object.values(this.audioFiles).forEach(audioPath => {
+      const audio = new Audio(audioPath);
+      audio.preload = 'metadata'; // Preload metadata only to save bandwidth
+      audio.addEventListener('error', (e) => {
+        console.warn(`Failed to load audio file: ${audioPath}`);
+      });
+    });
   },
 
   toggleNarration() {
-    if (this.isSpeaking) {
+    if (this.isPlaying) {
       this.stopNarration();
     } else {
       this.startNarration();
@@ -594,118 +598,129 @@ const NarratorController = {
   },
 
   startNarration() {
-    const messagePanel = document.getElementById('message-panel');
-    if (!messagePanel || !messagePanel.textContent.trim()) {
+    const currentSection = AnimationController.currentSection;
+    const audioPath = this.audioFiles[currentSection];
+    
+    if (!audioPath) {
+      console.warn(`No audio file configured for section ${currentSection}`);
       return;
     }
 
-    // Clean up HTML tags and get plain text
-    const textToRead = messagePanel.textContent.replace(/\s+/g, ' ').trim();
-    
-    if (!textToRead) return;
+    // Stop any existing audio
+    this.stopNarration();
 
-    // Stop any existing speech
-    speechSynthesis.cancel();
-
-    // Create new utterance
-    this.currentUtterance = new SpeechSynthesisUtterance(textToRead);
+    // Create new audio instance
+    this.currentAudio = new Audio(audioPath);
     
-    // Select a better voice if available
-    const voices = speechSynthesis.getVoices();
-    let selectedVoice = null;
-    
-    // Prefer these voice names in order of preference
-    const preferredVoices = [
-      // High quality English voices
-      'Samantha', 'Alex', 'Victoria', 'Daniel', 'Karen', 'Moira', 'Tessa',
-      // Google voices
-      'Google US English', 'Google UK English Female', 'Google UK English Male',
-      // Microsoft voices
-      'Microsoft Zira - English (United States)', 'Microsoft David - English (United States)',
-      'Microsoft Mark - English (United States)', 'Microsoft Hazel - English (Great Britain)',
-      // Safari/WebKit voices
-      'Ava', 'Samantha', 'Tom', 'Susan'
-    ];
-    
-    // Try to find a preferred voice
-    for (const voiceName of preferredVoices) {
-      selectedVoice = voices.find(voice => 
-        voice.name.toLowerCase().includes(voiceName.toLowerCase()) && 
-        voice.lang.startsWith('en')
-      );
-      if (selectedVoice) break;
-    }
-    
-    // Fallback to any high-quality English voice
-    if (!selectedVoice) {
-      selectedVoice = voices.find(voice => 
-        voice.lang.startsWith('en') && 
-        (voice.name.includes('Premium') || voice.name.includes('Enhanced') || voice.localService === true)
-      );
-    }
-    
-    // Final fallback to any English voice
-    if (!selectedVoice) {
-      selectedVoice = voices.find(voice => voice.lang.startsWith('en'));
-    }
-    
-    if (selectedVoice) {
-      this.currentUtterance.voice = selectedVoice;
-      console.log('Selected voice:', selectedVoice.name);
-    }
-    
-    // Configure voice settings for more natural speech
-    this.currentUtterance.rate = 0.85;  // Slightly slower for better comprehension
-    this.currentUtterance.pitch = 1.1;  // Slightly higher pitch for warmth
-    this.currentUtterance.volume = 0.9; // Higher volume for clarity
+    // Configure audio settings
+    this.currentAudio.volume = 0.8;
+    this.currentAudio.preload = 'auto';
 
     // Set up event listeners
-    this.currentUtterance.onstart = () => {
-      this.isSpeaking = true;
-      this.updateButtonState();
-    };
+    this.currentAudio.addEventListener('loadstart', () => {
+      console.log(`Loading audio: ${audioPath}`);
+    });
 
-    this.currentUtterance.onend = () => {
-      this.isSpeaking = false;
-      this.updateButtonState();
-    };
+    this.currentAudio.addEventListener('canplay', () => {
+      console.log(`Audio ready to play: ${audioPath}`);
+    });
 
-    this.currentUtterance.onerror = () => {
-      this.isSpeaking = false;
+    this.currentAudio.addEventListener('play', () => {
+      this.isPlaying = true;
       this.updateButtonState();
-    };
+    });
 
-    // Start speaking
-    speechSynthesis.speak(this.currentUtterance);
+    this.currentAudio.addEventListener('pause', () => {
+      this.isPlaying = false;
+      this.updateButtonState();
+    });
+
+    this.currentAudio.addEventListener('ended', () => {
+      this.isPlaying = false;
+      this.updateButtonState();
+    });
+
+    this.currentAudio.addEventListener('error', (e) => {
+      console.error(`Audio playback error: ${audioPath}`, e);
+      this.isPlaying = false;
+      this.updateButtonState();
+      
+      // Fallback to text-to-speech if audio fails
+      this.fallbackToTTS();
+    });
+
+    // Start playing
+    this.currentAudio.play().catch(error => {
+      console.error('Failed to play audio:', error);
+      this.fallbackToTTS();
+    });
   },
 
   stopNarration() {
-    speechSynthesis.cancel();
-    this.isSpeaking = false;
+    // Stop audio playback
+    if (this.currentAudio) {
+      this.currentAudio.pause();
+      this.currentAudio.currentTime = 0;
+      this.currentAudio = null;
+    }
+    
+    // Stop text-to-speech fallback
+    if (this.isUsingTTS || speechSynthesis.speaking) {
+      speechSynthesis.cancel();
+      this.isUsingTTS = false;
+    }
+    
+    this.isPlaying = false;
     this.updateButtonState();
   },
 
   updateButtonState() {
     const narratorButton = document.getElementById('narrator-button');
     if (narratorButton) {
-      if (this.isSpeaking) {
+      if (this.isPlaying) {
         narratorButton.classList.add('speaking');
-        narratorButton.setAttribute('aria-label', 'Stop narrator');
-        narratorButton.setAttribute('title', 'Stop reading');
+        narratorButton.setAttribute('aria-label', 'Stop audio');
+        narratorButton.setAttribute('title', 'Stop audio narration');
       } else {
         narratorButton.classList.remove('speaking');
-        narratorButton.setAttribute('aria-label', 'Toggle narrator');
-        narratorButton.setAttribute('title', 'Read message aloud');
+        narratorButton.setAttribute('aria-label', 'Play audio');
+        narratorButton.setAttribute('title', 'Play audio narration');
       }
     }
   },
 
-  // Auto-start narration when section changes (optional)
-  narrateCurrentSection() {
-    if (this.isSpeaking) {
-      this.stopNarration();
-      // Small delay to ensure previous speech is fully stopped
-      setTimeout(() => this.startNarration(), 100);
+  // Fallback to text-to-speech if audio files are not available
+  fallbackToTTS() {
+    if ('speechSynthesis' in window) {
+      const messagePanel = document.getElementById('message-panel');
+      if (!messagePanel || !messagePanel.textContent.trim()) return;
+
+      const textToRead = messagePanel.textContent.replace(/\s+/g, ' ').trim();
+      const utterance = new SpeechSynthesisUtterance(textToRead);
+      
+      utterance.rate = 0.85;
+      utterance.pitch = 1.1;
+      utterance.volume = 0.8;
+
+      utterance.onstart = () => {
+        this.isPlaying = true;
+        this.isUsingTTS = true;
+        this.updateButtonState();
+      };
+
+      utterance.onend = () => {
+        this.isPlaying = false;
+        this.isUsingTTS = false;
+        this.updateButtonState();
+      };
+
+      utterance.onerror = () => {
+        this.isPlaying = false;
+        this.isUsingTTS = false;
+        this.updateButtonState();
+      };
+
+      speechSynthesis.speak(utterance);
     }
   }
 };
