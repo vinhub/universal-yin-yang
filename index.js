@@ -559,6 +559,8 @@ const NarratorController = {
   currentAudio: null,
   isPlaying: false,
   isUsingTTS: false,
+  isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent),
+  audioContext: null,
   audioFiles: {
     0: 'audio/section-1.mp3', // Classic Yin-Yang
     1: 'audio/section-2.mp3', // Dynamic Yin-Yang
@@ -575,8 +577,41 @@ const NarratorController = {
       narratorButton.addEventListener('click', () => this.toggleNarration());
     }
     
+    // Initialize audio context for iOS
+    if (this.isIOS) {
+      this.initializeIOSAudio();
+    }
+    
     // Preload all audio files for better performance
     this.preloadAudio();
+  },
+
+  initializeIOSAudio() {
+    // Create AudioContext on first user interaction for iOS
+    const unlockAudio = () => {
+      if (!this.audioContext) {
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Create and play a silent buffer to unlock audio
+        const buffer = this.audioContext.createBuffer(1, 1, 22050);
+        const source = this.audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(this.audioContext.destination);
+        source.start(0);
+        
+        console.log('iOS audio unlocked');
+      }
+      
+      // Remove the event listeners after first interaction
+      document.removeEventListener('touchstart', unlockAudio);
+      document.removeEventListener('touchend', unlockAudio);
+      document.removeEventListener('click', unlockAudio);
+    };
+    
+    // Add event listeners for first user interaction
+    document.addEventListener('touchstart', unlockAudio);
+    document.addEventListener('touchend', unlockAudio);
+    document.addEventListener('click', unlockAudio);
   },
 
   preloadAudio() {
@@ -603,6 +638,7 @@ const NarratorController = {
     
     if (!audioPath) {
       console.warn(`No audio file configured for section ${currentSection}`);
+      this.fallbackToTTS();
       return;
     }
 
@@ -615,6 +651,17 @@ const NarratorController = {
     // Configure audio settings
     this.currentAudio.volume = 0.8;
     this.currentAudio.preload = 'auto';
+    
+    // iOS specific audio setup
+    if (this.isIOS) {
+      this.currentAudio.muted = false;
+      this.currentAudio.playsInline = true;
+      
+      // Ensure audio context is resumed on iOS
+      if (this.audioContext && this.audioContext.state === 'suspended') {
+        this.audioContext.resume();
+      }
+    }
 
     // Set up event listeners
     this.currentAudio.addEventListener('loadstart', () => {
@@ -649,11 +696,22 @@ const NarratorController = {
       this.fallbackToTTS();
     });
 
-    // Start playing
-    this.currentAudio.play().catch(error => {
-      console.error('Failed to play audio:', error);
-      this.fallbackToTTS();
-    });
+    // Start playing with proper error handling for iOS
+    const playPromise = this.currentAudio.play();
+    
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        console.log('Audio started successfully');
+      }).catch(error => {
+        console.error('Failed to play audio:', error);
+        
+        // If autoplay is blocked, try to enable it through user interaction
+        if (error.name === 'NotAllowedError') {
+          console.log('Autoplay blocked, falling back to TTS');
+          this.fallbackToTTS();
+        }
+      });
+    }
   },
 
   stopNarration() {
