@@ -587,31 +587,47 @@ const NarratorController = {
   },
 
   initializeIOSAudio() {
-    // Create AudioContext on first user interaction for iOS
+    // Create a more aggressive iOS audio unlock
     const unlockAudio = () => {
-      if (!this.audioContext) {
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      try {
+        // Method 1: AudioContext unlock
+        if (!this.audioContext) {
+          this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          
+          // Create and play a silent buffer to unlock audio
+          const buffer = this.audioContext.createBuffer(1, 1, 22050);
+          const source = this.audioContext.createBufferSource();
+          source.buffer = buffer;
+          source.connect(this.audioContext.destination);
+          source.start(0);
+        }
         
-        // Create and play a silent buffer to unlock audio
-        const buffer = this.audioContext.createBuffer(1, 1, 22050);
-        const source = this.audioContext.createBufferSource();
-        source.buffer = buffer;
-        source.connect(this.audioContext.destination);
-        source.start(0);
+        // Method 2: Create and play a dummy audio element
+        const dummyAudio = new Audio();
+        dummyAudio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTuX5PLKdSEFl2+Axsp6I8v7';
+        dummyAudio.volume = 0.01; // Very quiet
+        dummyAudio.play().then(() => {
+          console.log('iOS audio unlocked with dummy audio');
+        }).catch(e => {
+          console.log('Dummy audio failed, but may still have unlocked iOS audio');
+        });
         
-        console.log('iOS audio unlocked');
+        console.log('iOS audio unlock attempted');
+        
+      } catch (e) {
+        console.error('Error unlocking iOS audio:', e);
       }
       
       // Remove the event listeners after first interaction
-      document.removeEventListener('touchstart', unlockAudio);
-      document.removeEventListener('touchend', unlockAudio);
-      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio, true);
+      document.removeEventListener('touchend', unlockAudio, true);
+      document.removeEventListener('click', unlockAudio, true);
     };
     
-    // Add event listeners for first user interaction
-    document.addEventListener('touchstart', unlockAudio);
-    document.addEventListener('touchend', unlockAudio);
-    document.addEventListener('click', unlockAudio);
+    // Add event listeners for first user interaction with capture=true
+    document.addEventListener('touchstart', unlockAudio, true);
+    document.addEventListener('touchend', unlockAudio, true);
+    document.addEventListener('click', unlockAudio, true);
   },
 
   preloadAudio() {
@@ -636,6 +652,13 @@ const NarratorController = {
     const currentSection = AnimationController.currentSection;
     const audioPath = this.audioFiles[currentSection];
     
+    // On iOS, try TTS first since it's more reliable
+    if (this.isIOS) {
+      console.log('iOS detected, using TTS for better reliability');
+      this.fallbackToTTS();
+      return;
+    }
+    
     if (!audioPath) {
       console.warn(`No audio file configured for section ${currentSection}`);
       this.fallbackToTTS();
@@ -651,17 +674,7 @@ const NarratorController = {
     // Configure audio settings
     this.currentAudio.volume = 0.8;
     this.currentAudio.preload = 'auto';
-    
-    // iOS specific audio setup
-    if (this.isIOS) {
-      this.currentAudio.muted = false;
-      this.currentAudio.playsInline = true;
-      
-      // Ensure audio context is resumed on iOS
-      if (this.audioContext && this.audioContext.state === 'suspended') {
-        this.audioContext.resume();
-      }
-    }
+    this.currentAudio.crossOrigin = 'anonymous';
 
     // Set up event listeners
     this.currentAudio.addEventListener('loadstart', () => {
@@ -696,7 +709,7 @@ const NarratorController = {
       this.fallbackToTTS();
     });
 
-    // Start playing with proper error handling for iOS
+    // Start playing with proper error handling
     const playPromise = this.currentAudio.play();
     
     if (playPromise !== undefined) {
@@ -704,12 +717,7 @@ const NarratorController = {
         console.log('Audio started successfully');
       }).catch(error => {
         console.error('Failed to play audio:', error);
-        
-        // If autoplay is blocked, try to enable it through user interaction
-        if (error.name === 'NotAllowedError') {
-          console.log('Autoplay blocked, falling back to TTS');
-          this.fallbackToTTS();
-        }
+        this.fallbackToTTS();
       });
     }
   },
