@@ -32,34 +32,38 @@ const SECTION_DATA = [
   {
     canvasId: 'canvas-classic',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white'),
-    title: '1. Yin-Yang model of reality',
+    title: '1. Introduction',
     type: 'static',
-    message: "Life is full of opposites that actually work together: light and shadow, joy and sorrow, work and rest, " +
-             "giving and receiving. The Yin-Yang symbol shows us that these aren't really opposites fighting each other—" +
-             "they're dance partners, each one making the other more meaningful. " +
-             "Notice how each side contains a seed of the other, reminding us that within every challenge lies an opportunity, " +
+    message: "Life appears to be full of opposites that, upon closer examination, turn out to be " +
+             "complementary and interdependent: light and shadow, joy and sorrow, work and rest, " +
+             "giving and receiving. The Yin-Yang symbol represents this idea with a simple visual metaphor " +
+             "with two interlocked shapes that make a whole. " +
+             "Also notice how each side contains a seed of the other, reminding us that within every challenge lies an opportunity, " +
              "and within every triumph, a lesson in humility. <br/><br/>" +
-             "Ready to dig deeper? Swipe or click the arrow to continue this journey of discovery."
+             "Ready to dig deeper? Click the autoplay button at the top or manually proceed through the pages."
   },
   {
     canvasId: 'canvas-dynamic',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
     title: '2. Yin-Yangs are dynamic',
     type: 'animated',
-    message: "Watch how the forces flow and shift—just like life itself! Nothing stays the same forever. " +
-             "Sometimes you're on top of the world, sometimes you're learning hard lessons. " +
-             "Sometimes you're giving your all, sometimes you need to receive and recharge. " +
-             "This constant dance isn't chaos—it's the rhythm of growth, renewal, and wisdom. " +
-             "Understanding this can bring peace to life's inevitable ups and downs."
+    message: "All Yin-Yang relationships are dynamic, as shown in the animation. " +
+             "The two forces are constantly pushing against each other, taking turns leading or following. " +
+             "This process can be frustrating if one takes a narrow, one-sided perspective. " +
+             "But looking at the bigger picture makes one realize that the two forces are more like dance partners, creating a more beautiful and meaningful movement together. " +
+             "It is this movement that provides the underlying rhythm for growth, renewal, and wisdom. " +
+             "Seeing it in this manner can lead to peace and appreciation for life."
   },
   {
     canvasId: 'canvas-cycles',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
     title: '3. Each cycle is different',
     type: 'complex',
-    message: "Life doesn't follow a predictable script. Some seasons of challenge are brief, others stretch longer than expected. " +
-             "Some moments of joy are fleeting, others become lasting foundations. Watch closely—you'll see the cycles " +
-             "constantly changing in length and intensity. This unpredictability isn't a bug, it's a feature! " +
+    message: "The Yin-Yang expansion and contraction cycles don't follow a predictable script. " +
+             "Some seasons of challenge are brief, others stretch longer than expected. " +
+             "Some moments of joy are fleeting, others become lasting foundations. " +
+             "Watch the animation closely. You'll see the cycles constantly changing in length and intensity. " +
+             "This unpredictability isn't a bug, it's a feature! " +
              "It keeps life interesting and teaches us to stay flexible, present, and open to whatever comes next."
   },
   {
@@ -67,39 +71,41 @@ const SECTION_DATA = [
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'red', 'blue'),
     title: '4. Politics: A perfect example',
     type: 'complex',
-    message: "Here's where it gets really interesting &#128522;—even in politics, the Yin-Yang principle shows up! " +
+    message: "Here's where it gets really interesting &#128522;: The Yin-Yang principle applies extremely well to politics! " +
              "Different political viewpoints (represented here in red and blue) might seem like enemies, " +
-             "but they actually serve an important purpose together. One side pushes for change and progress, " +
-             "the other provides stability and caution. Neither is completely right or wrong—they balance each other, " +
-             "preventing society from moving too fast or staying too still. Democracy works when both forces dance well together."
+             "but their opposition serves an important purpose. One side pushes for change and progress, " +
+             "the other provides stability and caution. Neither is completely right or wrong all the time. " +
+             "They balance each other, preventing society from moving to extremes, yet providing space for experimentation. " +
+             "This movement, despite its imperfections, is essential for the functioning of society."
   },
   {
     canvasId: 'canvas-fractal',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
     title: '5. Yin-Yangs are fractal',
     type: 'fractal',
-    message: "Yin-Yangs exhibit self-similarity at different scales, much like fractals. " +
-             "No matter how closely you examine them, you will always find the same underlying patterns and structures. " +
-             "It shows that these principles are not just applicable at one level, but are universal across all levels of existence."
+    message: "If you look closely, you may find Yin-Yang dances going on at multiple levels simultaneously. " +
+             "For example, you may have national political parties locked in a Yin-Yang, along with state and local parties doing the same. " +
+             "This pattern may even continue deeper, into smaller communities, families and even inside a single person's head! " +
+             "This idea is symbolically depicted in the animation using smaller yin-yangs inside the bigger one."
   },
   {
     canvasId: 'canvas-evolution',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: '6. The relationships evolve',
+    title: '6. They may evolve',
     type: 'evolution',
     message: "Sometimes a Yin-Yang relationship can evolve into a different form. " +
              "In some cases, new relationships may appear, or existing ones may cease to exist. " +
-             "And yet, the basic principles of balance, interdependence, and complementarity remain."
+             "The form may change, and yet, the basic principles of balance, interdependence, and complementarity remain."
   },
   {
     canvasId: 'canvas-everywhere',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: '7. Yin-Yangs are everywhere',
+    title: '7. They are everywhere',
     type: 'composite',
     message: "The Yin-Yang is one of life's most profound patterns. Now that you understand them, " +
              "you'll start noticing them everywhere: in relationships, in nature, in your daily rhythms, even in your own thoughts and emotions. " +
-             "Every challenge contains opportunity, every ending enables a new beginning, every breath out makes the breath in possible. " +
-             "This ancient wisdom isn't just philosophy—it's a practical tool for navigating life with more grace, balance, and understanding. " +
+             "Every challenge contains opportunity, every ending enables a new beginning, every breath out makes the next breath in possible. " +
+             "This ancient wisdom isn't just philosophy. It's a practical tool for navigating life with more grace, balance, and understanding. " +
              "The dance continues, and now you're aware you're also a part of it. Welcome to seeing the world through Yin-Yang eyes! &#127775;"
   }
 ];
