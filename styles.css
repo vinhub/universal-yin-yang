@@ -17,6 +17,175 @@
   order: 1;
   margin: 20px 0;
   height: auto;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.yin-yang-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Section transition overlay */
+.section-transition-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, rgba(0,0,0,0.8), rgba(0,0,0,0.9));
+  opacity: 0;
+  visibility: hidden;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  transition: all 0.8s ease;
+}
+
+.section-transition-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Initial page load overlay */
+.page-load-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  opacity: 1;
+  visibility: visible;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(20px);
+  transition: all 1s ease;
+}
+
+.page-load-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.section-transition-content {
+  text-align: center;
+  color: white;
+  font-size: 24px;
+  font-weight: 300;
+  animation: pulse 1s ease-in-out infinite alternate;
+}
+
+.page-load-content {
+  text-align: center;
+  color: white;
+  font-size: 28px;
+  font-weight: 300;
+}
+
+.page-load-content .yin-yang-large {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 30px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #000 50%, #fff 50%);
+  position: relative;
+  animation: spin 3s linear infinite;
+}
+
+.page-load-content .yin-yang-large::before,
+.page-load-content .yin-yang-large::after {
+  content: '';
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.page-load-content .yin-yang-large::before {
+  left: 0;
+  background: #fff;
+}
+
+.page-load-content .yin-yang-large::after {
+  right: 0;
+  background: #000;
+}
+
+.page-load-content .welcome-text {
+  animation: fadeInUp 1.5s ease-out;
+}
+
+.section-transition-content .yin-yang-mini {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #000 50%, #fff 50%);
+  position: relative;
+  animation: spin 2s linear infinite;
+}
+
+.section-transition-content .yin-yang-mini::before,
+.section-transition-content .yin-yang-mini::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.section-transition-content .yin-yang-mini::before {
+  left: 0;
+  background: #fff;
+}
+
+.section-transition-content .yin-yang-mini::after {
+  right: 0;
+  background: #000;
+}
+
+/* Pulse animation for transition text */
+@keyframes pulse {
+  from {
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+/* Fade in up animation for welcome text */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Spin animation for mini yin-yang */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 canvas {
   width: 65vmin;

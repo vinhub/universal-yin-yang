@@ -454,14 +454,80 @@ const AnimationController = {
 // ============================
 
 const NavigationController = {
-  showSection(idx) {
+  showSection(idx, withTransition = false) {
+    // Stop auto-play if this is a manual navigation (not from auto-play)
+    if (NarratorController.isAutoPlay && !this.isAutoPlayNavigation) {
+      console.log('Manual navigation detected, stopping auto-play...');
+      NarratorController.stopAutoPlay('manual navigation');
+    }
+    
     // Only stop narration if not in auto-play mode (to prevent conflicts)
     if (NarratorController.isPlaying && !NarratorController.isAutoPlay) {
       NarratorController.stopNarration();
     }
     
+    if (withTransition) {
+      this.showTransitionAnimation(idx);
+    } else {
+      this.performSectionSwitch(idx);
+    }
+  },
+
+  // Flag to indicate when navigation is triggered by auto-play
+  isAutoPlayNavigation: false,
+
+  // Method for auto-play to use when navigating
+  showSectionAutoPlay(idx) {
+    this.isAutoPlayNavigation = true;
+    this.showSection(idx, true);
+    this.isAutoPlayNavigation = false;
+  },
+
+  showTransitionAnimation(idx) {
+    const overlay = document.getElementById('transition-overlay');
+    const transitionText = document.getElementById('transition-text');
+    const nextSectionTitle = SECTION_DATA[idx].title;
+    
+    // Show transition overlay
+    transitionText.textContent = `Loading ${nextSectionTitle}...`;
+    overlay.classList.add('active');
+    
+    // Scroll to top smoothly
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+    
+    // Wait for transition animation, then switch sections
+    setTimeout(() => {
+      this.performSectionSwitch(idx);
+      
+      // Hide transition overlay after section is loaded
+      setTimeout(() => {
+        overlay.classList.remove('active');
+      }, 500);
+    }, 1000);
+  },
+
+  performSectionSwitch(idx) {
+    // Hide all sections first
     SECTION_DATA.forEach((_, i) => {
-      document.getElementById('section-' + i).style.display = (i === idx) ? 'flex' : 'none';
+      const section = document.getElementById('section-' + i);
+      section.style.display = 'none';
+      section.classList.remove('visible');
+    });
+    
+    // Show target section
+    const targetSection = document.getElementById('section-' + idx);
+    targetSection.style.display = 'flex';
+    
+    // Trigger animation after a brief delay to ensure display change has taken effect
+    setTimeout(() => {
+      targetSection.classList.add('visible');
+    }, 100);
+    
+    // Update navigation controls
+    SECTION_DATA.forEach((_, i) => {
       document.getElementById(`arrow-left-${i}`).disabled = (idx === 0);
       document.getElementById(`arrow-right-${i}`).disabled = (idx === SECTION_DATA.length - 1);
     });
@@ -485,13 +551,13 @@ const NavigationController = {
       document.getElementById(`arrow-left-${i}`).addEventListener('click', () => {
         if (AnimationController.currentSection > 0) {
           AnimationController.currentSection--;
-          this.showSection(AnimationController.currentSection);
+          this.showSection(AnimationController.currentSection, true);
         }
       });
       document.getElementById(`arrow-right-${i}`).addEventListener('click', () => {
         if (AnimationController.currentSection < SECTION_DATA.length - 1) {
           AnimationController.currentSection++;
-          this.showSection(AnimationController.currentSection);
+          this.showSection(AnimationController.currentSection, true);
         }
       });
     }
@@ -499,13 +565,89 @@ const NavigationController = {
     // Setup carousel indicators
     document.querySelectorAll('.indicator').forEach((indicator, index) => {
       indicator.addEventListener('click', () => {
-        AnimationController.currentSection = index;
-        this.showSection(index);
+        if (AnimationController.currentSection !== index) {
+          AnimationController.currentSection = index;
+          this.showSection(index, true);
+        }
       });
     });
     
+    // Setup keyboard navigation
+    this.initializeKeyboardNavigation();
+    
     // Setup swipe gestures
     this.initializeSwipeGestures();
+    
+    // Setup page refresh/unload detection
+    this.initializePageUnloadDetection();
+  },
+
+  initializeKeyboardNavigation() {
+    document.addEventListener('keydown', (e) => {
+      // Only handle navigation if not in an input field
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      
+      switch(e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          if (AnimationController.currentSection > 0) {
+            AnimationController.currentSection--;
+            this.showSection(AnimationController.currentSection, true);
+          }
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          if (AnimationController.currentSection < SECTION_DATA.length - 1) {
+            AnimationController.currentSection++;
+            this.showSection(AnimationController.currentSection, true);
+          }
+          break;
+        case 'Home':
+          e.preventDefault();
+          AnimationController.currentSection = 0;
+          this.showSection(0, true);
+          break;
+        case 'End':
+          e.preventDefault();
+          AnimationController.currentSection = SECTION_DATA.length - 1;
+          this.showSection(SECTION_DATA.length - 1, true);
+          break;
+      }
+    });
+  },
+
+  initializePageUnloadDetection() {
+    // Stop auto-play on page refresh/close
+    window.addEventListener('beforeunload', () => {
+      if (NarratorController.isAutoPlay) {
+        console.log('Page unloading, stopping auto-play...');
+        NarratorController.stopAutoPlay('page unload');
+      }
+    });
+    
+    // Stop auto-play if page becomes hidden (tab switch, minimize, etc.)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && NarratorController.isAutoPlay) {
+        console.log('Page hidden, stopping auto-play...');
+        NarratorController.stopAutoPlay('page hidden');
+      }
+    });
+    
+    // Stop auto-play on browser back/forward navigation
+    window.addEventListener('popstate', () => {
+      if (NarratorController.isAutoPlay) {
+        console.log('Browser navigation detected, stopping auto-play...');
+        NarratorController.stopAutoPlay('browser navigation');
+      }
+    });
+    
+    // Stop auto-play on focus loss (clicking outside, Alt+Tab, etc.)
+    window.addEventListener('blur', () => {
+      if (NarratorController.isAutoPlay) {
+        console.log('Window focus lost, stopping auto-play...');
+        NarratorController.stopAutoPlay('focus lost');
+      }
+    });
   },
 
   initializeSwipeGestures() {
@@ -537,13 +679,13 @@ const NavigationController = {
           // Swipe right - go to previous section
           if (AnimationController.currentSection > 0) {
             AnimationController.currentSection--;
-            this.showSection(AnimationController.currentSection);
+            this.showSection(AnimationController.currentSection, true);
           }
         } else {
           // Swipe left - go to next section
           if (AnimationController.currentSection < SECTION_DATA.length - 1) {
             AnimationController.currentSection++;
-            this.showSection(AnimationController.currentSection);
+            this.showSection(AnimationController.currentSection, true);
           }
         }
       }
@@ -561,6 +703,7 @@ const NarratorController = {
   isUsingTTS: false,
   isAutoPlay: false,
   autoPlayTimer: null,
+  currentNarrationSection: -1, // Track which section is currently being narrated
   isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent),
   audioContext: null,
   audioFiles: {
@@ -658,14 +801,57 @@ const NarratorController = {
     this.playCurrentSectionWithAutoAdvance();
   },
 
-  stopAutoPlay() {
-    this.isAutoPlay = false;
-    if (this.autoPlayTimer) {
-      clearTimeout(this.autoPlayTimer);
-      this.autoPlayTimer = null;
+  stopAutoPlay(reason = 'manual') {
+    if (this.isAutoPlay) {
+      console.log(`Auto-play stopped: ${reason}`);
+      this.isAutoPlay = false;
+      if (this.autoPlayTimer) {
+        clearTimeout(this.autoPlayTimer);
+        this.autoPlayTimer = null;
+      }
+      this.stopNarration();
+      this.updateAutoPlayButton();
+      
+      // Show brief notification if stopped due to manual intervention
+      if (reason !== 'completed') {
+        this.showAutoPlayStoppedNotification();
+      }
     }
-    this.stopNarration();
-    this.updateAutoPlayButton();
+  },
+
+  showAutoPlayStoppedNotification() {
+    // Create or update notification element
+    let notification = document.getElementById('autoplay-stopped-notification');
+    if (!notification) {
+      notification = document.createElement('div');
+      notification.id = 'autoplay-stopped-notification';
+      notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        font-size: 14px;
+        z-index: 1500;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      `;
+      document.body.appendChild(notification);
+    }
+    
+    notification.textContent = 'Auto-play stopped';
+    notification.style.opacity = '1';
+    
+    // Fade out after 2 seconds
+    setTimeout(() => {
+      notification.style.opacity = '0';
+    }, 2000);
   },
 
   playCurrentSectionWithAutoAdvance() {
@@ -709,19 +895,19 @@ const NarratorController = {
       
       // Move to next section
       AnimationController.currentSection++;
-      NavigationController.showSection(AnimationController.currentSection);
+      NavigationController.showSectionAutoPlay(AnimationController.currentSection);
       
-      // Continue auto-play with next section after a brief pause
+      // Wait for complete transition (1000ms transition + 500ms overlay fade + 100ms section visible delay + buffer)
       setTimeout(() => {
         if (this.isAutoPlay) { // Check we're still in auto-play mode
           console.log(`Starting narration for section ${AnimationController.currentSection}`);
           this.playCurrentSectionWithAutoAdvance();
         }
-      }, 500); // Brief 0.5 second pause to ensure section is loaded
+      }, 1800); // Extended delay to ensure transition is completely finished
     } else {
       // Reached the end, stop auto-play
       console.log('Auto-play journey completed!');
-      this.stopAutoPlay();
+      this.stopAutoPlay('completed');
     }
   },
 
@@ -760,6 +946,15 @@ const NarratorController = {
       console.log('Narration already playing, skipping...');
       return;
     }
+
+    // Additional check to ensure section is valid
+    if (currentSection < 0 || currentSection >= SECTION_DATA.length) {
+      console.log(`Invalid section ${currentSection}, skipping narration`);
+      return;
+    }
+
+    // Store the section we're starting narration for to prevent race conditions
+    this.currentNarrationSection = currentSection;
     
     // On iOS or if no audio file, use TTS directly
     if (this.isIOS || !audioPath) {
@@ -781,23 +976,24 @@ const NarratorController = {
     });
 
     this.currentAudio.addEventListener('play', () => {
-      console.log(`Audio started playing for section ${currentSection}`);
+      console.log(`Audio started playing for section ${this.currentNarrationSection}`);
       this.isPlaying = true;
       this.updateButtonState();
     });
 
     this.currentAudio.addEventListener('ended', () => {
-      console.log(`Audio ended for section ${currentSection}, autoPlay: ${this.isAutoPlay}`);
+      console.log(`Audio ended for section ${this.currentNarrationSection}, autoPlay: ${this.isAutoPlay}`);
       this.isPlaying = false;
       this.updateButtonState();
       // Only trigger auto-advance if in auto-play mode and no timer already set
-      if (this.isAutoPlay && !this.autoPlayTimer) {
+      // Also verify we're still on the same section we started narrating
+      if (this.isAutoPlay && !this.autoPlayTimer && this.currentNarrationSection === AnimationController.currentSection) {
         this.onNarrationEnd();
       }
     });
 
     this.currentAudio.addEventListener('error', (e) => {
-      console.log(`Audio failed for section ${currentSection}, falling back to TTS`);
+      console.log(`Audio failed for section ${this.currentNarrationSection}, falling back to TTS`);
       this.isPlaying = false;
       this.updateButtonState();
       this.currentAudio = null;
@@ -843,6 +1039,7 @@ const NarratorController = {
     }
     
     this.isPlaying = false;
+    this.currentNarrationSection = -1; // Reset tracked section
     this.updateButtonState();
   },
 
@@ -883,29 +1080,29 @@ const NarratorController = {
       utterance.pitch = 1.1;
       utterance.volume = 0.8;
 
-      const currentSection = AnimationController.currentSection;
-      console.log(`Starting TTS for section ${currentSection}, autoPlay: ${this.isAutoPlay}`);
+      console.log(`Starting TTS for section ${this.currentNarrationSection}, autoPlay: ${this.isAutoPlay}`);
 
       utterance.onstart = () => {
-        console.log(`TTS started for section ${currentSection}`);
+        console.log(`TTS started for section ${this.currentNarrationSection}`);
         this.isPlaying = true;
         this.isUsingTTS = true;
         this.updateButtonState();
       };
 
       utterance.onend = () => {
-        console.log(`TTS ended for section ${currentSection}, autoPlay: ${this.isAutoPlay}`);
+        console.log(`TTS ended for section ${this.currentNarrationSection}, autoPlay: ${this.isAutoPlay}`);
         this.isPlaying = false;
         this.isUsingTTS = false;
         this.updateButtonState();
         // Only trigger auto-advance if in auto-play mode and no timer already set
-        if (this.isAutoPlay && !this.autoPlayTimer) {
+        // Also verify we're still on the same section we started narrating
+        if (this.isAutoPlay && !this.autoPlayTimer && this.currentNarrationSection === AnimationController.currentSection) {
           this.onNarrationEnd();
         }
       };
 
       utterance.onerror = () => {
-        console.error(`TTS error for section ${currentSection}`);
+        console.error(`TTS error for section ${this.currentNarrationSection}`);
         this.isPlaying = false;
         this.isUsingTTS = false;
         this.updateButtonState();
@@ -925,3 +1122,23 @@ const NarratorController = {
 NavigationController.initializeNavigation();
 NavigationController.showSection(AnimationController.currentSection);
 NarratorController.initialize();
+
+// Handle initial page load with welcome transition
+document.addEventListener('DOMContentLoaded', () => {
+  const pageLoadOverlay = document.getElementById('page-load-overlay');
+  const firstSection = document.getElementById('section-0');
+  
+  // Show welcome screen for 2.5 seconds, then fade out
+  setTimeout(() => {
+    if (pageLoadOverlay) {
+      pageLoadOverlay.classList.add('hidden');
+    }
+    
+    // Show first section with animation after overlay starts fading
+    setTimeout(() => {
+      if (firstSection) {
+        firstSection.classList.add('visible');
+      }
+    }, 500);
+  }, 2500);
+});
