@@ -1179,7 +1179,7 @@ function initializeTransitionYinYangs() {
 // Draw mini Yin-Yang using the main drawing code
 function drawMiniYinYang(canvas) {
   const ctx = canvas.getContext('2d');
-  const radius = 18; // Slightly smaller than canvas to fit nicely
+  const radius = 8; // Made smaller for less prominent transition animation
   
   // Enable high-quality rendering
   ctx.imageSmoothingEnabled = true;
