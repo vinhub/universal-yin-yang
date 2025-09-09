@@ -424,12 +424,27 @@ const AnimationController = {
 
       const { circle1Radius, circle2Radius } = AnimationUtils.calculateRadii(yinYangRadius, minFactor, radiusFactor, blend);
 
-      this._renderFrame(section, ctx, yinYangRadius, radiusFactor, blend, circle1Radius, circle2Radius, t);
-
       if (section.type === 'evolution') {
-        radiusFactor += Math.cosh(blend) * ANIMATION_CONFIG.evolutionSpeed;
-        if (radiusFactor > 1) return;
-        EvolutionDrawer.drawFlower(ctx, yinYangRadius * radiusFactor);
+        // Create continuous cycling between yin-yang and flower
+        const cycleSpeed = 0.01; // Adjust this to change cycle speed
+        const evolutionPhase = Math.sin(t * cycleSpeed) * 0.5 + 0.5; // Oscillates between 0 and 1
+        
+        // Clear canvas for clean transitions
+        ctx.clearRect(-yinYangRadius * 2, -yinYangRadius * 2, yinYangRadius * 4, yinYangRadius * 4);
+        
+        // Draw yin-yang with inverse cycling (strong when evolutionPhase is near 0)
+        const yinYangPhase = 1 - evolutionPhase;
+        if (yinYangPhase > 0) {
+          const adjustedRadius = yinYangRadius * yinYangPhase;
+          section.draw(blend, circle1Radius * yinYangPhase, circle2Radius * yinYangPhase, ctx, adjustedRadius);
+        }
+        
+        // Draw flower overlay (strong when evolutionPhase is near 1)
+        if (evolutionPhase > 0) {
+          EvolutionDrawer.drawFlower(ctx, yinYangRadius * evolutionPhase);
+        }
+      } else {
+        this._renderFrame(section, ctx, yinYangRadius, radiusFactor, blend, circle1Radius, circle2Radius, t);
       }
 
       this.animationFrameId = requestAnimationFrame(() => frame(t + 0.5));
