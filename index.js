@@ -524,6 +524,22 @@ const NavigationController = {
     // Trigger animation after a brief delay to ensure display change has taken effect
     setTimeout(() => {
       targetSection.classList.add('visible');
+      
+      // Scroll to top after section is visible and positioned
+      setTimeout(() => {
+        // The main-content-wrapper is the actual scrollable container below the title bar
+        const mainContentWrapper = document.getElementById('main-content-wrapper');
+        if (mainContentWrapper) {
+          // Force scroll to top of the content area
+          mainContentWrapper.scrollTop = 0;
+          mainContentWrapper.scrollTo({ top: 0, behavior: 'instant' });
+        }
+        
+        // Also ensure document is at top (fallback for desktop where document might scroll)
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }, 50);
     }, 100);
     
     // Update navigation controls

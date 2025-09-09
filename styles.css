@@ -353,9 +353,9 @@ canvas {
 
 /* Auto-play button styles */
 #autoplay-button {
-  background: none;
-  border: none;
-  padding: 8px;
+  background: linear-gradient(135deg, rgba(255, 140, 66, 0.8), rgba(255, 100, 40, 0.9));
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 6px;
   margin-left: 16px;
   cursor: pointer;
   display: flex;
@@ -363,29 +363,50 @@ canvas {
   justify-content: center;
   border-radius: 50%;
   transition: all 0.3s ease;
-  color: #c75a0a;
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 140, 66, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
 }
 
 #autoplay-button:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: scale(1.1);
+  background: linear-gradient(135deg, rgba(255, 140, 66, 1), rgba(255, 100, 40, 1));
+  box-shadow: 0 6px 20px rgba(255, 140, 66, 0.5),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 #autoplay-button.active {
-  background: rgba(255, 140, 66, 0.2);
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.9), rgba(39, 174, 96, 1));
   animation: pulse-autoplay 2s infinite;
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 20px rgba(46, 204, 113, 0.4),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 @keyframes pulse-autoplay {
-  0% { box-shadow: 0 0 0 0 rgba(255, 140, 66, 0.4); }
-  50% { box-shadow: 0 0 0 8px rgba(255, 140, 66, 0.1); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 140, 66, 0); }
+  0% { 
+    box-shadow: 0 4px 20px rgba(46, 204, 113, 0.4),
+                0 0 0 0 rgba(46, 204, 113, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  50% { 
+    box-shadow: 0 4px 20px rgba(46, 204, 113, 0.4),
+                0 0 0 12px rgba(46, 204, 113, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  100% { 
+    box-shadow: 0 4px 20px rgba(46, 204, 113, 0.4),
+                0 0 0 0 rgba(46, 204, 113, 0),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
 }
 
 #autoplay-button svg {
   display: block;
   width: 24px;
   height: 24px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
 #autoplay-button svg path,
