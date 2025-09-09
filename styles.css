@@ -245,8 +245,8 @@ canvas {
   align-self: center;
 }
 
-/* Narrator button styles */
-#narrator-button {
+/* Auto-play button styles */
+#autoplay-button {
   background: none;
   border: none;
   padding: 8px;
@@ -256,32 +256,34 @@ canvas {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: background-color 0.2s ease;
-}
-
-#narrator-button:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-#narrator-button.speaking {
-  background: rgba(255, 140, 66, 0.2);
-  animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.6; }
-  100% { opacity: 1; }
-}
-
-#narrator-button svg {
-  display: block;
-  width: 24px;
-  height: 24px;
+  transition: all 0.3s ease;
   color: #c75a0a;
 }
 
-#narrator-button svg path {
+#autoplay-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+#autoplay-button.active {
+  background: rgba(255, 140, 66, 0.2);
+  animation: pulse-autoplay 2s infinite;
+}
+
+@keyframes pulse-autoplay {
+  0% { box-shadow: 0 0 0 0 rgba(255, 140, 66, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 140, 66, 0.1); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 140, 66, 0); }
+}
+
+#autoplay-button svg {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+#autoplay-button svg path,
+#autoplay-button svg circle {
   fill: currentColor;
 }
 
@@ -289,7 +291,7 @@ canvas {
   #title-bar {
     align-items: stretch;
   }
-  #narrator-button {
+  #autoplay-button {
     position: absolute;
     right: 12px;
     top: 4px;
