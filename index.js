@@ -427,7 +427,9 @@ const AnimationController = {
       if (section.type === 'evolution') {
         // Create continuous cycling between yin-yang and flower
         const cycleSpeed = 0.01; // Adjust this to change cycle speed
-        const evolutionPhase = Math.sin(t * cycleSpeed) * 0.5 + 0.5; // Oscillates between 0 and 1
+        const delayTime = 200; // Delay before cycling starts
+        const adjustedTime = Math.max(0, t - delayTime); // Start cycling after delay
+        const evolutionPhase = (Math.sin(adjustedTime * cycleSpeed - Math.PI/2) + 1) * 0.5; // Starts at 0 (full yin-yang)
         
         // Clear canvas for clean transitions
         ctx.clearRect(-yinYangRadius * 2, -yinYangRadius * 2, yinYangRadius * 4, yinYangRadius * 4);
