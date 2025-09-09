@@ -57,7 +57,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(45deg, rgba(0,0,0,0.8), rgba(0,0,0,0.9));
   opacity: 1;
   visibility: visible;
   z-index: 2000;
@@ -84,74 +84,23 @@
 .page-load-content {
   text-align: center;
   color: white;
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 300;
+  animation: pulse 1s ease-in-out infinite alternate;
 }
 
 .page-load-content .yin-yang-large {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 30px;
-  border-radius: 50%;
-  background: linear-gradient(45deg, #000 50%, #fff 50%);
-  position: relative;
-  animation: spin 3s linear infinite;
-}
-
-.page-load-content .yin-yang-large::before,
-.page-load-content .yin-yang-large::after {
-  content: '';
-  position: absolute;
   width: 40px;
   height: 40px;
-  border-radius: 50%;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.page-load-content .yin-yang-large::before {
-  left: 0;
-  background: #fff;
-}
-
-.page-load-content .yin-yang-large::after {
-  right: 0;
-  background: #000;
-}
-
-.page-load-content .welcome-text {
-  animation: fadeInUp 1.5s ease-out;
+  margin: 0 auto 20px;
+  animation: spin 2s linear infinite;
 }
 
 .section-transition-content .yin-yang-mini {
   width: 40px;
   height: 40px;
   margin: 0 auto 20px;
-  border-radius: 50%;
-  background: linear-gradient(45deg, #000 50%, #fff 50%);
-  position: relative;
   animation: spin 2s linear infinite;
-}
-
-.section-transition-content .yin-yang-mini::before,
-.section-transition-content .yin-yang-mini::after {
-  content: '';
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.section-transition-content .yin-yang-mini::before {
-  left: 0;
-  background: #fff;
-}
-
-.section-transition-content .yin-yang-mini::after {
-  right: 0;
-  background: #000;
 }
 
 /* Pulse animation for transition text */
@@ -163,18 +112,6 @@
   to {
     opacity: 1;
     transform: scale(1.05);
-  }
-}
-
-/* Fade in up animation for welcome text */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 

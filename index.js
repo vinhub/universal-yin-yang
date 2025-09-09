@@ -489,7 +489,7 @@ const NavigationController = {
     const nextSectionTitle = SECTION_DATA[idx].title;
     
     // Show transition overlay
-    transitionText.textContent = `Loading ${nextSectionTitle}...`;
+    transitionText.textContent = nextSectionTitle;
     overlay.classList.add('active');
     
     // Scroll to top smoothly
@@ -1123,10 +1123,76 @@ NavigationController.initializeNavigation();
 NavigationController.showSection(AnimationController.currentSection);
 NarratorController.initialize();
 
+// Initialize transition Yin-Yang canvases
+function initializeTransitionYinYangs() {
+  const transitionCanvas = document.getElementById('transition-canvas');
+  const pageLoadCanvas = document.getElementById('page-load-canvas');
+  
+  if (transitionCanvas) {
+    drawMiniYinYang(transitionCanvas);
+  }
+  
+  if (pageLoadCanvas) {
+    drawMiniYinYang(pageLoadCanvas);
+  }
+}
+
+// Draw mini Yin-Yang using the main drawing code
+function drawMiniYinYang(canvas) {
+  const ctx = canvas.getContext('2d');
+  const radius = 18; // Slightly smaller than canvas to fit nicely
+  
+  // Enable high-quality rendering
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  
+  // Set up canvas with higher DPI for crisp rendering
+  const dpr = window.devicePixelRatio || 1;
+  const displayWidth = canvas.width;
+  const displayHeight = canvas.height;
+  
+  canvas.width = displayWidth * dpr;
+  canvas.height = displayHeight * dpr;
+  canvas.style.width = displayWidth + 'px';
+  canvas.style.height = displayHeight + 'px';
+  
+  ctx.scale(dpr, dpr);
+  
+  // Set up canvas
+  ctx.clearRect(0, 0, displayWidth, displayHeight);
+  ctx.save();
+  ctx.translate(displayWidth / 2, displayHeight / 2);
+  
+  // Enable anti-aliasing
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  
+  // Use the same proportions as the main Yin-Yang
+  const circle1Radius = radius * 0.5;
+  const circle2Radius = radius * 0.5;
+  const yinYangRadius = radius;
+  
+  // Draw using the existing core method
+  YinYangDrawer._drawYinYangCore(
+    ctx, 
+    circle1Radius, 
+    circle2Radius, 
+    yinYangRadius, 
+    '#000', // Black
+    '#fff', // White
+    true    // Include dots
+  );
+  
+  ctx.restore();
+}
+
 // Handle initial page load with welcome transition
 document.addEventListener('DOMContentLoaded', () => {
   const pageLoadOverlay = document.getElementById('page-load-overlay');
   const firstSection = document.getElementById('section-0');
+  
+  // Initialize the transition Yin-Yangs
+  initializeTransitionYinYangs();
   
   // Show welcome screen for 2.5 seconds, then fade out
   setTimeout(() => {
