@@ -57,10 +57,11 @@ const SECTION_DATA = [
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
     title: '3. Each cycle is different',
     type: 'complex',
-    message: "The Yin-Yang expansion and contraction cycles don't follow a predictable script. " +
-             "Some seasons of challenge are brief, others stretch longer than expected. " +
-             "Some moments of joy are fleeting, others become lasting foundations. " +
-             "Watch the animation closely. You'll see the cycles constantly changing in length and intensity. " +
+    message: "The Yin-Yang expansion and contraction cycles aren't always predictable in terms of their length or intensity. " +
+             "Each cycle is different. " +
+             "Just like some winters are brief, others stretch longer than expected. " +
+             "Or some moments of joy are fleeting, others become lasting foundations. " +
+             "Watch the animation closely. You'll see the cycles constantly changing. " +
              "This unpredictability isn't a bug, it's a feature! " +
              "It keeps life interesting and teaches us to stay flexible, present, and open to whatever comes next."
   },

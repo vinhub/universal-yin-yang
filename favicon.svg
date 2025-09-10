@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Outer circle -->
+  <circle cx="16" cy="16" r="16" fill="white"/>
+  
+  <!-- Main yin-yang shape -->
+  <!-- Black half -->
+  <path d="M 16 0 A 16 16 0 0 1 16 32 A 8 8 0 0 1 16 16 A 8 8 0 0 0 16 0 Z" fill="black"/>
+  
+  <!-- White dot in black half -->
+  <circle cx="16" cy="8" r="2.5" fill="white"/>
+  
+  <!-- Black dot in white half -->
+  <circle cx="16" cy="24" r="2.5" fill="black"/>
+</svg>
