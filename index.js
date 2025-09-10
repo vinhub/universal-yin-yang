@@ -8,8 +8,6 @@ const ANIMATION_CONFIG = {
   minFactor: 0.5,
   fractalSpeed1: 0.02,
   fractalSpeed2: 0.03,
-  evolutionSpeed: 0.003,
-  flowerPetalCount: 8,
   borderWidth: 0.025,
   compositeCount: 6,
   compositeColors: [
@@ -89,18 +87,9 @@ const SECTION_DATA = [
              "This idea is symbolically depicted in the animation using smaller yin-yangs inside the bigger one."
   },
   {
-    canvasId: 'canvas-evolution',
-    draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: '6. They may evolve',
-    type: 'evolution',
-    message: "Sometimes a Yin-Yang relationship can evolve into a different form. " +
-             "In some cases, new relationships may appear, or existing ones may cease to exist. " +
-             "The form may change, and yet, the basic principles of balance, interdependence, and complementarity remain."
-  },
-  {
     canvasId: 'canvas-everywhere',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: '7. They are everywhere',
+    title: '6. Yin-Yangs are everywhere',
     type: 'composite',
     message: "The Yin-Yang is one of life's most profound patterns. Now that you understand them, " +
              "you'll start noticing them everywhere: in relationships, in nature, in your daily rhythms, even in your own thoughts and emotions. " +
@@ -289,74 +278,6 @@ const YinYangDrawer = {
 };
 
 // ============================
-// EVOLUTION DRAWING MODULE
-// ============================
-
-const EvolutionDrawer = {
-  drawFlower(ctx, rad) {
-    ctx.save();
-    ctx.rotate(Math.PI / 2);
-    for (let i = 0; i < ANIMATION_CONFIG.flowerPetalCount; i++) {
-      ctx.save();
-      ctx.rotate((Math.PI / 4) * i);
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.bezierCurveTo(rad * 0.25, rad * 0.25, rad * 1.0, rad * 0.25, rad * 1.0, 0);
-      ctx.bezierCurveTo(rad * 1.0, -rad * 0.25, rad * 0.25, -rad * 0.25, 0, 0);
-      ctx.closePath();
-      ctx.fillStyle = i % 2 === 0 ? 'black' : 'white';
-      ctx.fill();
-      ctx.restore();
-    }
-    ctx.restore();
-  },
-
-  drawComposite(ctx, yinYangRadius, time) {
-    ctx.clearRect(-yinYangRadius * 2, -yinYangRadius * 2, yinYangRadius * 4, yinYangRadius * 4);
-    
-    const positions = this._generateCompositePositions();
-    positions.forEach((pos, index) => this._drawCompositeYinYang(ctx, pos, index, yinYangRadius, time));
-  },
-
-  _generateCompositePositions() {
-    return [
-      { x: 0, y: 0, size: 0.40, colors: ['black', 'white'] },      // Center
-      // Inner ring
-      { x: -0.75, y: 0, size: 0.20, colors: ['darkblue', 'lightblue'] },
-      { x: 0.75, y: 0, size: 0.20, colors: ['darkgreen', 'lightgreen'] },
-      { x: 0, y: -0.75, size: 0.20, colors: ['purple', 'lavender'] },
-      { x: 0, y: 0.75, size: 0.20, colors: ['brown', 'wheat'] },
-      // Outer ring
-      { x: -0.80, y: -0.65, size: 0.20, colors: ['navy', 'gold'] },
-      { x: 0.80, y: -0.65, size: 0.20, colors: ['maroon', 'pink'] },
-      { x: 0.80, y: 0.65, size: 0.20, colors: ['darkred', 'orange'] },
-      { x: -0.80, y: 0.65, size: 0.20, colors: ['indigo', 'silver'] }
-    ];
-  },
-
-  _drawCompositeYinYang(ctx, pos, index, yinYangRadius, time) {
-    ctx.save();
-    
-    // Position with gentle drift
-    const driftX = Math.sin(time * 0.0008 + index * 0.5) * 0.03;
-    const driftY = Math.cos(time * 0.0006 + index * 0.8) * 0.025;
-    ctx.translate((pos.x + driftX) * yinYangRadius, (pos.y + driftY) * yinYangRadius);
-    
-    // Rotation
-    const rotationSpeed = 0.001 + (index * 0.0003);
-    ctx.rotate(time * rotationSpeed + index * Math.PI / 4);
-    
-    const miniRadius = yinYangRadius * pos.size;
-    const blend = 0.5 * (1 + Math.sin(time * 0.002 + index * 1.2));
-    const r1 = miniRadius * (0.25 + 0.5 * blend);
-    const r2 = miniRadius - r1;
-    
-    this.drawBasicNoClear(blend, r1, r2, ctx, miniRadius, pos.colors[0], pos.colors[1]);
-    ctx.restore();
-  }
-};
-
-// ============================
 // ANIMATION UTILITIES MODULE
 // ============================
 
@@ -424,30 +345,7 @@ const AnimationController = {
 
       const { circle1Radius, circle2Radius } = AnimationUtils.calculateRadii(yinYangRadius, minFactor, radiusFactor, blend);
 
-      if (section.type === 'evolution') {
-        // Create continuous cycling between yin-yang and flower
-        const cycleSpeed = 0.01; // Adjust this to change cycle speed
-        const delayTime = 200; // Delay before cycling starts
-        const adjustedTime = Math.max(0, t - delayTime); // Start cycling after delay
-        const evolutionPhase = (Math.sin(adjustedTime * cycleSpeed - Math.PI/2) + 1) * 0.5; // Starts at 0 (full yin-yang)
-        
-        // Clear canvas for clean transitions
-        ctx.clearRect(-yinYangRadius * 2, -yinYangRadius * 2, yinYangRadius * 4, yinYangRadius * 4);
-        
-        // Draw yin-yang with inverse cycling (strong when evolutionPhase is near 0)
-        const yinYangPhase = 1 - evolutionPhase;
-        if (yinYangPhase > 0) {
-          const adjustedRadius = yinYangRadius * yinYangPhase;
-          section.draw(blend, circle1Radius * yinYangPhase, circle2Radius * yinYangPhase, ctx, adjustedRadius);
-        }
-        
-        // Draw flower overlay (strong when evolutionPhase is near 1)
-        if (evolutionPhase > 0) {
-          EvolutionDrawer.drawFlower(ctx, yinYangRadius * evolutionPhase);
-        }
-      } else {
-        this._renderFrame(section, ctx, yinYangRadius, radiusFactor, blend, circle1Radius, circle2Radius, t);
-      }
+      this._renderFrame(section, ctx, yinYangRadius, radiusFactor, blend, circle1Radius, circle2Radius, t);
 
       this.animationFrameId = requestAnimationFrame(() => frame(t + 0.5));
     };
@@ -748,11 +646,10 @@ const NarratorController = {
   audioFiles: {
     0: 'audio/section-1.mp3', // Classic Yin-Yang
     1: 'audio/section-2.mp3', // Dynamic Yin-Yang
-    2: 'audio/section-3.mp3', // Evolution
-    3: 'audio/section-4.mp3', // Flower
+    2: 'audio/section-3.mp3', // Cycles
+    3: 'audio/section-4.mp3', // Politics
     4: 'audio/section-5.mp3', // Fractal
-    5: 'audio/section-6.mp3', // Modular
-    6: 'audio/section-7.mp3'  // Composite
+    5: 'audio/section-6.mp3'  // Everywhere
   },
 
   initialize() {
