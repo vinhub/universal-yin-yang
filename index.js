@@ -747,47 +747,7 @@ const NarratorController = {
       }
       this.stopNarration();
       this.updateAutoPlayButton();
-      
-      // Show brief notification if stopped due to manual intervention
-      if (reason !== 'completed') {
-        this.showAutoPlayStoppedNotification();
-      }
     }
-  },
-
-  showAutoPlayStoppedNotification() {
-    // Create or update notification element
-    let notification = document.getElementById('autoplay-stopped-notification');
-    if (!notification) {
-      notification = document.createElement('div');
-      notification.id = 'autoplay-stopped-notification';
-      notification.style.cssText = `
-        position: fixed;
-        top: 80px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 12px 24px;
-        border-radius: 25px;
-        font-size: 14px;
-        z-index: 1500;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        pointer-events: none;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-      `;
-      document.body.appendChild(notification);
-    }
-    
-    notification.textContent = 'Auto-play stopped';
-    notification.style.opacity = '1';
-    
-    // Fade out after 2 seconds
-    setTimeout(() => {
-      notification.style.opacity = '0';
-    }, 2000);
   },
 
   playCurrentSectionWithAutoAdvance() {
