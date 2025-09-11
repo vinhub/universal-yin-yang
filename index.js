@@ -99,9 +99,18 @@ const SECTION_DATA = [
     type: 'composite',
     message: "The Yin-Yang is one of life's most profound and persistent patterns. " +
              "They're everywhere: in relationships, in nature, in your daily rhythms, even in your own thoughts and emotions. " +
-             "This isn't just abstract philosophy. It's a practical tool for navigating life with more grace, balance, and understanding. " +
-             "The dance continues, and you're a part of it, whether you realize it or not. " +
-             "Welcome to seeing the world through Yin-Yang eyes! &#127775;"
+             "This isn't just abstract philosophy. It's a practical tool for navigating life with more grace, balance, and understanding. "
+  },
+  {
+    canvasId: 'canvas-conclusion',
+    draw: (blend, r1, r2, ctx, rad, colorA, colorB, time) => YinYangDrawer.drawRotating(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white', time),
+    title: '8. The eternal dance',
+    type: 'rotating',
+    message: "The dance continues, reminding us that all of life is movement, change, and balance. " +
+             "In every moment, forces are shifting, perspectives are evolving, and new harmonies are being found. " +
+             "And you're a part of this dance, whether you realize it or not. " +
+             "May you move through life with the wisdom of the Yin-Yang: embracing both sides, finding balance in motion, " +
+             "and discovering the seeds of light within the darkness and the seeds of wisdom within the light."
   }
 ];
 
@@ -174,6 +183,19 @@ const YinYangDrawer = {
 
   drawBasicNoClear(blend, circle1Radius, circle2Radius, ctx, yinYangRadius, colorA, colorB) {
     this._drawYinYangCore(ctx, circle1Radius, circle2Radius, yinYangRadius, colorA, colorB);
+  },
+
+  drawRotating(blend, circle1Radius, circle2Radius, ctx, yinYangRadius, colorA, colorB, time) {
+    ctx.clearRect(-yinYangRadius * 2, -yinYangRadius * 2, yinYangRadius * 4, yinYangRadius * 4);
+    
+    // Apply slow rotation
+    ctx.save();
+    ctx.rotate(time * 0.003); // Slow rotation
+    
+    // Draw the basic yin-yang with standard proportions
+    this._drawYinYangCore(ctx, circle1Radius, circle2Radius, yinYangRadius, colorA, colorB);
+    
+    ctx.restore();
   },
 
   drawPulsatingDots(blend, circle1Radius, circle2Radius, ctx, yinYangRadius, colorA, colorB, time) {
@@ -402,6 +424,9 @@ const AnimationController = {
         YinYangDrawer.drawComposite(ctx, yinYangRadius, time);
         break;
       case 'pulsating':
+        section.draw(blend, circle1Radius, circle2Radius, ctx, adjustedRadius, 'black', 'white', time);
+        break;
+      case 'rotating':
         section.draw(blend, circle1Radius, circle2Radius, ctx, adjustedRadius, 'black', 'white', time);
         break;
       default:
@@ -690,7 +715,8 @@ const NarratorController = {
     3: 'audio/section-4.mp3', // Cycles
     4: 'audio/section-5.mp3', // Politics
     5: 'audio/section-6.mp3', // Fractal
-    6: 'audio/section-7.mp3'  // Everywhere
+    6: 'audio/section-7.mp3', // Everywhere
+    7: 'audio/section-8.mp3'  // The eternal dance
   },
 
   initialize() {
