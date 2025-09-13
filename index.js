@@ -79,7 +79,7 @@ const SECTION_DATA = [
              "Opposing political movements might seem like enemies, " +
              "with each side trying to push society one way " +
              "while the other tries to pull it back. " +
-             "But it is through this push and pull that we find the balance that fits the current overall situation. " +
+             "But it is through this push and pull that we find the balance that allows us to move forward. " +
              "This struggle, despite its annoyances, is essential for a healthy society."
   },
   {
@@ -88,7 +88,7 @@ const SECTION_DATA = [
     title: '6. Yin-Yangs are fractal',
     type: 'fractal',
     message: "You may find Yin-Yang patterns coexisting at multiple levels. " +
-             "For example, the same political ideas may be locked in Yin-Yang dances at the national, state and local levels. " +
+             "For example, the same political ideas may be locked in Yin-Yang dances at the national, state, and local levels. " +
              "The pattern may even continue deeper, into families and even inside a single person's head! " +
              "This idea is symbolically depicted in the animation using smaller Yin-Yangs inside the bigger one."
   },
@@ -99,7 +99,7 @@ const SECTION_DATA = [
     type: 'composite',
     message: "The Yin-Yang is one of life's most profound and persistent patterns. " +
              "They're everywhere: in relationships, in nature, in your daily rhythms, even in your own thoughts and emotions. " +
-             "This isn't just abstract philosophy. It's a practical tool for navigating life with more grace, balance, and understanding. "
+             "This isn't just abstract philosophy; it's a practical tool for navigating life with more grace, balance, and understanding. "
   },
   {
     canvasId: 'canvas-conclusion',
@@ -205,8 +205,8 @@ const YinYangDrawer = {
     const { dot1Radius, dot2Radius } = this._drawYinYangCore(ctx, circle1Radius, circle2Radius, yinYangRadius, colorA, colorB, false);
 
     // Calculate alternating pulses
-    const pulse1 = 1.0 + 0.4 * Math.sin(time * 0.08); // White dot pulse (much faster)
-    const pulse2 = 1.0 + 0.4 * Math.sin(time * 0.08 + Math.PI); // Black dot pulse (opposite phase)
+    const pulse1 = 1.0 + 0.4 * Math.sin(time * 0.025); // White dot pulse (much faster)
+    const pulse2 = 1.0 + 0.4 * Math.sin(time * 0.025 + Math.PI); // Black dot pulse (opposite phase)
     
     // Draw pulsating dots using the rotated coordinate system from core method
     ctx.save();
