@@ -750,17 +750,43 @@ const NarratorController = {
           source.start(0);
         }
         
-        // Method 2: Create and play a dummy audio element
-        const dummyAudio = new Audio();
-        dummyAudio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTuX5PLKdSEFl2+Axsp6I8v7';
-        dummyAudio.volume = 0.01; // Very quiet
-        dummyAudio.play().then(() => {
-          console.log('iOS audio unlocked with dummy audio');
-        }).catch(e => {
-          console.log('Dummy audio failed, but may still have unlocked iOS audio');
+        // Method 2: Create multiple Audio elements and try to play them
+        for (let i = 0; i < 3; i++) {
+          const testAudio = new Audio();
+          testAudio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTuX5PLKdSEFJHfD8N2QQQoUXrTp66hVFApGn+DyvmwhBTuX5PLKdSEFJHfD8N2QQA==';
+          testAudio.volume = 0.001; // Very very quiet
+          testAudio.muted = true; // Start muted
+          testAudio.play().then(() => {
+            console.log(`iOS audio unlock ${i + 1} successful`);
+            testAudio.muted = false; // Unmute for future use
+          }).catch(() => {
+            console.log(`iOS audio unlock ${i + 1} failed`);
+          });
+        }
+        
+        // Method 3: Preload and prepare actual audio files
+        Object.values(this.audioFiles).forEach((audioPath, index) => {
+          setTimeout(() => {
+            const preloadAudio = new Audio(audioPath);
+            preloadAudio.volume = 0;
+            preloadAudio.preload = 'auto';
+            preloadAudio.load();
+            
+            // Try a quick play/pause to further unlock
+            const playAttempt = preloadAudio.play();
+            if (playAttempt) {
+              playAttempt.then(() => {
+                preloadAudio.pause();
+                preloadAudio.currentTime = 0;
+                console.log(`Preloaded and unlocked: ${audioPath}`);
+              }).catch(() => {
+                console.log(`Preload play failed for: ${audioPath}`);
+              });
+            }
+          }, index * 100); // Stagger the preloading
         });
         
-        console.log('iOS audio unlock attempted');
+        console.log('iOS audio unlock attempted with multiple methods');
         
       } catch (e) {
         console.error('Error unlocking iOS audio:', e);
@@ -776,6 +802,15 @@ const NarratorController = {
     document.addEventListener('touchstart', unlockAudio, true);
     document.addEventListener('touchend', unlockAudio, true);
     document.addEventListener('click', unlockAudio, true);
+    
+    // Also try to unlock on page load after a short delay
+    setTimeout(() => {
+      if (this.audioContext && this.audioContext.state === 'suspended') {
+        this.audioContext.resume().then(() => {
+          console.log('AudioContext resumed on iOS');
+        });
+      }
+    }, 1000);
   },
 
   preloadAudio() {
@@ -919,9 +954,9 @@ const NarratorController = {
     // Store the section we're starting narration for to prevent race conditions
     this.currentNarrationSection = currentSection;
     
-    // On iOS or if no audio file, use TTS directly
-    if (this.isIOS || !audioPath) {
-      console.log('Using TTS (iOS or no audio file)');
+    // If no audio file exists, use TTS directly
+    if (!audioPath) {
+      console.log('No audio file found, using TTS');
       this.fallbackToTTS();
       return;
     }
@@ -929,13 +964,23 @@ const NarratorController = {
     // Try audio file first
     this.currentAudio = new Audio(audioPath);
     
-    // Configure audio settings
+    // Configure audio settings for better iOS compatibility
     this.currentAudio.volume = 0.8;
     this.currentAudio.preload = 'auto';
+    this.currentAudio.crossOrigin = 'anonymous'; // Help with CORS issues
+    
+    // For iOS, try to load the audio more aggressively
+    if (this.isIOS) {
+      this.currentAudio.load(); // Force load on iOS
+    }
 
     // Set up event listeners
     this.currentAudio.addEventListener('loadstart', () => {
       console.log(`Loading audio: ${audioPath}`);
+    });
+
+    this.currentAudio.addEventListener('canplaythrough', () => {
+      console.log(`Audio can play through: ${audioPath}`);
     });
 
     this.currentAudio.addEventListener('play', () => {
@@ -956,7 +1001,12 @@ const NarratorController = {
     });
 
     this.currentAudio.addEventListener('error', (e) => {
-      console.log(`Audio failed for section ${this.currentNarrationSection}, falling back to TTS`);
+      console.log(`Audio failed for section ${this.currentNarrationSection}:`, e);
+      console.log('Audio error details:', {
+        error: e.target?.error,
+        networkState: e.target?.networkState,
+        readyState: e.target?.readyState
+      });
       this.isPlaying = false;
       this.updateButtonState();
       this.currentAudio = null;
@@ -965,15 +1015,41 @@ const NarratorController = {
       this.fallbackToTTS();
     });
 
+    this.currentAudio.addEventListener('stalled', () => {
+      console.log(`Audio stalled for section ${this.currentNarrationSection}, trying TTS fallback`);
+      // If audio stalls for too long, fallback to TTS
+      setTimeout(() => {
+        if (this.currentAudio && this.currentAudio.readyState < 2) {
+          console.log('Audio still not ready, falling back to TTS');
+          this.fallbackToTTS();
+        }
+      }, 3000); // 3 second timeout
+    });
+
     // Start playing with proper error handling
     const playPromise = this.currentAudio.play();
     
     if (playPromise !== undefined) {
-      playPromise.catch(error => {
-        console.log(`Audio play failed for section ${currentSection}, falling back to TTS`);
+      playPromise.then(() => {
+        console.log(`Audio play promise resolved for section ${currentSection}`);
+      }).catch(error => {
+        console.log(`Audio play failed for section ${currentSection}:`, error.name, error.message);
         this.isPlaying = false;
         this.currentAudio = null;
-        this.fallbackToTTS();
+        
+        // Don't fallback to TTS immediately on iOS autoplay policy errors
+        // Instead, try to play a user-initiated audio first
+        if (this.isIOS && (error.name === 'NotAllowedError' || error.name === 'AbortError')) {
+          console.log('iOS autoplay blocked, attempting user interaction unlock');
+          this.attemptIOSAudioUnlock().then(() => {
+            // Retry audio after unlock attempt
+            this.retryAudioPlayback(audioPath);
+          }).catch(() => {
+            this.fallbackToTTS();
+          });
+        } else {
+          this.fallbackToTTS();
+        }
       });
     }
   },
@@ -1004,6 +1080,77 @@ const NarratorController = {
     this.isPlaying = false;
     this.currentNarrationSection = -1; // Reset tracked section
     this.updateButtonState();
+  },
+
+  async attemptIOSAudioUnlock() {
+    return new Promise((resolve, reject) => {
+      try {
+        // Create a very short, quiet audio file to unlock iOS audio
+        const silentAudio = new Audio();
+        silentAudio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTuX5PLKdSEFJHfD8N2QQQoUXrTp66hVFApGn+DyvmwhBTuX5PLKdSEFJHfD8N2QQA==';
+        silentAudio.volume = 0.01;
+        silentAudio.currentTime = 0;
+        
+        const playPromise = silentAudio.play();
+        if (playPromise) {
+          playPromise.then(() => {
+            console.log('iOS audio unlock successful');
+            resolve();
+          }).catch(() => {
+            console.log('iOS audio unlock failed');
+            reject();
+          });
+        } else {
+          reject();
+        }
+      } catch (e) {
+        console.log('iOS audio unlock error:', e);
+        reject();
+      }
+    });
+  },
+
+  retryAudioPlayback(audioPath) {
+    console.log(`Retrying audio playback: ${audioPath}`);
+    
+    // Create new audio instance
+    this.currentAudio = new Audio(audioPath);
+    this.currentAudio.volume = 0.8;
+    this.currentAudio.preload = 'auto';
+    this.currentAudio.crossOrigin = 'anonymous';
+    
+    // Set up basic event listeners
+    this.currentAudio.addEventListener('play', () => {
+      console.log(`Retry audio started playing for section ${this.currentNarrationSection}`);
+      this.isPlaying = true;
+      this.updateButtonState();
+    });
+
+    this.currentAudio.addEventListener('ended', () => {
+      console.log(`Retry audio ended for section ${this.currentNarrationSection}`);
+      this.isPlaying = false;
+      this.updateButtonState();
+      if (this.isAutoPlay && !this.autoPlayTimer && this.currentNarrationSection === AnimationController.currentSection) {
+        this.onNarrationEnd();
+      }
+    });
+
+    this.currentAudio.addEventListener('error', () => {
+      console.log(`Retry audio failed, falling back to TTS`);
+      this.isPlaying = false;
+      this.currentAudio = null;
+      this.fallbackToTTS();
+    });
+
+    // Attempt to play
+    const playPromise = this.currentAudio.play();
+    if (playPromise) {
+      playPromise.catch(() => {
+        console.log('Retry audio play failed, using TTS');
+        this.currentAudio = null;
+        this.fallbackToTTS();
+      });
+    }
   },
 
   updateButtonState() {
