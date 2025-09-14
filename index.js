@@ -907,6 +907,10 @@ const NarratorController = {
       return;
     }
     
+    // CRITICAL: Stop all narration before advancing to prevent dual audio
+    console.log('Stopping all narration before section advance');
+    this.stopNarration();
+    
     // Clear any existing timer to prevent double-execution
     if (this.autoPlayTimer) {
       clearTimeout(this.autoPlayTimer);
@@ -962,148 +966,157 @@ const NarratorController = {
     // Stop any existing narration first
     this.stopNarration();
     
-    // Prevent multiple narrations from starting
-    if (this.isPlaying || this.isUsingTTS) {
-      console.log('Narration already playing after stop attempt, skipping...');
-      return;
-    }
-
-    // Additional check to ensure section is valid
-    if (currentSection < 0 || currentSection >= SECTION_DATA.length) {
-      console.log(`Invalid section ${currentSection}, skipping narration`);
-      return;
-    }
-
-    // Store the section we're starting narration for to prevent race conditions
-    this.currentNarrationSection = currentSection;
-    
-    // If no audio file exists, use TTS directly
-    if (!audioPath) {
-      console.log('No audio file found, using TTS');
-      this.fallbackToTTS();
-      return;
-    }
-
-    // Try audio file first
-    this.currentAudio = new Audio(audioPath);
-    
-    // Configure audio settings for better iOS compatibility
-    this.currentAudio.volume = 0.8;
-    this.currentAudio.preload = 'auto';
-    this.currentAudio.crossOrigin = 'anonymous'; // Help with CORS issues
-    
-    // For iOS, try to load the audio more aggressively
-    if (this.isIOS) {
-      this.currentAudio.load(); // Force load on iOS
-    }
-
-    // Set up event listeners
-    this.currentAudio.addEventListener('loadstart', () => {
-      console.log(`Loading audio: ${audioPath}`);
-    });
-
-    this.currentAudio.addEventListener('canplaythrough', () => {
-      console.log(`Audio can play through: ${audioPath}`);
-    });
-
-    this.currentAudio.addEventListener('play', () => {
-      console.log(`Audio started playing for section ${this.currentNarrationSection}`);
-      this.isPlaying = true;
-      this.updateButtonState();
-    });
-
-    this.currentAudio.addEventListener('ended', () => {
-      console.log(`Audio ended for section ${this.currentNarrationSection}, autoPlay: ${this.isAutoPlay}`);
-      this.isPlaying = false;
-      this.updateButtonState();
-      // Only trigger auto-advance if in auto-play mode and no timer already set
-      // Also verify we're still on the same section we started narrating
-      if (this.isAutoPlay && !this.autoPlayTimer && this.currentNarrationSection === AnimationController.currentSection) {
-        this.onNarrationEnd();
+    // Add a small delay to ensure stopNarration has completed
+    setTimeout(() => {
+      // Re-check after the delay to prevent race conditions
+      if (this.isPlaying || this.isUsingTTS) {
+        console.log('Narration still playing after stop attempt, skipping...');
+        return;
       }
-    });
 
-    this.currentAudio.addEventListener('error', (e) => {
-      console.log(`Audio failed for section ${this.currentNarrationSection}:`, e);
-      console.log('Audio error details:', {
-        error: e.target?.error,
-        networkState: e.target?.networkState,
-        readyState: e.target?.readyState
+      // Additional check to ensure section is valid
+      if (currentSection < 0 || currentSection >= SECTION_DATA.length) {
+        console.log(`Invalid section ${currentSection}, skipping narration`);
+        return;
+      }
+
+      // Ensure we're still on the same section we intended to start
+      if (currentSection !== AnimationController.currentSection) {
+        console.log(`Section changed from ${currentSection} to ${AnimationController.currentSection}, aborting narration start`);
+        return;
+      }
+
+      // Store the section we're starting narration for to prevent race conditions
+      this.currentNarrationSection = currentSection;
+      
+      // If no audio file exists, use TTS directly
+      if (!audioPath) {
+        console.log('No audio file found, using TTS');
+        this.fallbackToTTS();
+        return;
+      }
+
+      // Try audio file first
+      this.currentAudio = new Audio(audioPath);
+      
+      // Configure audio settings for better iOS compatibility
+      this.currentAudio.volume = 0.8;
+      this.currentAudio.preload = 'auto';
+      this.currentAudio.crossOrigin = 'anonymous'; // Help with CORS issues
+      
+      // For iOS, try to load the audio more aggressively
+      if (this.isIOS) {
+        this.currentAudio.load(); // Force load on iOS
+      }
+
+      // Set up event listeners
+      this.currentAudio.addEventListener('loadstart', () => {
+        console.log(`Loading audio: ${audioPath}`);
       });
-      this.isPlaying = false;
-      this.updateButtonState();
-      this.currentAudio = null;
-      
-      // Fallback to text-to-speech if audio fails
-      this.fallbackToTTS();
-    });
 
-    this.currentAudio.addEventListener('stalled', () => {
-      console.log(`Audio stalled for section ${this.currentNarrationSection}, setting up TTS fallback timer`);
-      // If audio stalls for too long, fallback to TTS
-      // But use a different timer to avoid conflicts with autoplay timer
-      const stallTimeout = setTimeout(() => {
-        // More thorough checks before falling back to TTS
-        if (this.currentAudio && 
-            this.currentAudio.readyState < 2 && 
-            !this.isPlaying && 
-            !this.isUsingTTS &&
-            this.currentNarrationSection === AnimationController.currentSection) {
-          console.log('Audio still not ready after stall, falling back to TTS');
-          // Clear the audio reference before starting TTS
-          this.currentAudio.src = '';
-          this.currentAudio = null;
-          this.fallbackToTTS();
-        }
-      }, 5000); // 5 second timeout
-      
-      // Clear the stall timeout if audio starts playing or if we switch sections
-      const clearStallTimeout = () => {
-        clearTimeout(stallTimeout);
-      };
-      
-      this.currentAudio.addEventListener('play', clearStallTimeout, { once: true });
-      this.currentAudio.addEventListener('canplaythrough', clearStallTimeout, { once: true });
-      this.currentAudio.addEventListener('error', clearStallTimeout, { once: true });
-    });
+      this.currentAudio.addEventListener('canplaythrough', () => {
+        console.log(`Audio can play through: ${audioPath}`);
+      });
 
-    // Start playing with proper error handling
-    const playPromise = this.currentAudio.play();
-    
-    if (playPromise !== undefined) {
-      playPromise.then(() => {
-        console.log(`Audio play promise resolved for section ${currentSection}`);
-      }).catch(error => {
-        console.log(`Audio play failed for section ${currentSection}:`, error.name, error.message);
+      this.currentAudio.addEventListener('play', () => {
+        console.log(`Audio started playing for section ${this.currentNarrationSection}`);
+        this.isPlaying = true;
+        this.updateButtonState();
+      });
+
+      this.currentAudio.addEventListener('ended', () => {
+        console.log(`Audio ended for section ${this.currentNarrationSection}, autoPlay: ${this.isAutoPlay}`);
         this.isPlaying = false;
-        
-        // Immediately clear the audio to prevent stall timeouts from triggering
-        if (this.currentAudio) {
-          this.currentAudio.src = '';
-          this.currentAudio = null;
+        this.updateButtonState();
+        // Only trigger auto-advance if in auto-play mode and no timer already set
+        // Also verify we're still on the same section we started narrating
+        if (this.isAutoPlay && !this.autoPlayTimer && this.currentNarrationSection === AnimationController.currentSection) {
+          this.onNarrationEnd();
         }
+      });
+
+      this.currentAudio.addEventListener('error', (e) => {
+        console.log(`Audio failed for section ${this.currentNarrationSection}:`, e);
+        console.log('Audio error details:', {
+          error: e.target?.error,
+          networkState: e.target?.networkState,
+          readyState: e.target?.readyState
+        });
+        this.isPlaying = false;
+        this.updateButtonState();
+        this.currentAudio = null;
         
-        // Don't fallback to TTS immediately on iOS autoplay policy errors
-        // Instead, try to play a user-initiated audio first
-        if (this.isIOS && (error.name === 'NotAllowedError' || error.name === 'AbortError')) {
-          console.log('iOS autoplay blocked, attempting user interaction unlock');
-          this.attemptIOSAudioUnlock().then(() => {
-            // Retry audio after unlock attempt
-            this.retryAudioPlayback(audioPath);
-          }).catch(() => {
+        // Fallback to text-to-speech if audio fails
+        this.fallbackToTTS();
+      });
+
+      this.currentAudio.addEventListener('stalled', () => {
+        console.log(`Audio stalled for section ${this.currentNarrationSection}, setting up TTS fallback timer`);
+        // If audio stalls for too long, fallback to TTS
+        // But use a different timer to avoid conflicts with autoplay timer
+        const stallTimeout = setTimeout(() => {
+          // More thorough checks before falling back to TTS
+          if (this.currentAudio && 
+              this.currentAudio.readyState < 2 && 
+              !this.isPlaying && 
+              !this.isUsingTTS &&
+              this.currentNarrationSection === AnimationController.currentSection) {
+            console.log('Audio still not ready after stall, falling back to TTS');
+            // Clear the audio reference before starting TTS
+            this.currentAudio.src = '';
+            this.currentAudio = null;
+            this.fallbackToTTS();
+          }
+        }, 5000); // 5 second timeout
+        
+        // Clear the stall timeout if audio starts playing or if we switch sections
+        const clearStallTimeout = () => {
+          clearTimeout(stallTimeout);
+        };
+        
+        this.currentAudio.addEventListener('play', clearStallTimeout, { once: true });
+        this.currentAudio.addEventListener('canplaythrough', clearStallTimeout, { once: true });
+        this.currentAudio.addEventListener('error', clearStallTimeout, { once: true });
+      });
+
+      // Start playing with proper error handling
+      const playPromise = this.currentAudio.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          console.log(`Audio play promise resolved for section ${currentSection}`);
+        }).catch(error => {
+          console.log(`Audio play failed for section ${currentSection}:`, error.name, error.message);
+          this.isPlaying = false;
+          
+          // Immediately clear the audio to prevent stall timeouts from triggering
+          if (this.currentAudio) {
+            this.currentAudio.src = '';
+            this.currentAudio = null;
+          }
+          
+          // Don't fallback to TTS immediately on iOS autoplay policy errors
+          // Instead, try to play a user-initiated audio first
+          if (this.isIOS && (error.name === 'NotAllowedError' || error.name === 'AbortError')) {
+            console.log('iOS autoplay blocked, attempting user interaction unlock');
+            this.attemptIOSAudioUnlock().then(() => {
+              // Retry audio after unlock attempt
+              this.retryAudioPlayback(audioPath);
+            }).catch(() => {
+              // Only start TTS if we're still on the same section and not already playing something
+              if (this.currentNarrationSection === AnimationController.currentSection && !this.isPlaying && !this.isUsingTTS) {
+                this.fallbackToTTS();
+              }
+            });
+          } else {
             // Only start TTS if we're still on the same section and not already playing something
             if (this.currentNarrationSection === AnimationController.currentSection && !this.isPlaying && !this.isUsingTTS) {
               this.fallbackToTTS();
             }
-          });
-        } else {
-          // Only start TTS if we're still on the same section and not already playing something
-          if (this.currentNarrationSection === AnimationController.currentSection && !this.isPlaying && !this.isUsingTTS) {
-            this.fallbackToTTS();
           }
-        }
-      });
-    }
+        });
+      }
+    }, 100); // 100ms delay to ensure clean state
   },
 
   stopNarration() {
@@ -1124,6 +1137,18 @@ const NarratorController = {
     this.isUsingTTS = false;
     this.currentNarrationSection = -1; // Reset tracked section
     this.updateButtonState();
+    
+    // For iOS, add extra delay to ensure everything stops
+    if (this.isIOS) {
+      setTimeout(() => {
+        // Double-check everything is stopped
+        if (speechSynthesis.speaking) {
+          speechSynthesis.cancel();
+        }
+        this.isPlaying = false;
+        this.isUsingTTS = false;
+      }, 50);
+    }
   },
 
   stopAllAudio() {
