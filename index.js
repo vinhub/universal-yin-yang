@@ -46,7 +46,7 @@ const SECTION_DATA = [
              "They represent the profound truth that each side contains a 'seed' of its opposite. " +
              "They tell us that even in our darkest moments, there is potential for light and growth, " +
              "and even in our brightest times, there are opportunities for reflection and renewal. " +
-             "Understanding this helps us find hope in difficulty and humility in success."
+             "Understanding this helps us find hope in difficulty, and humility in success."
   },
   {
     canvasId: 'canvas-dynamic',
@@ -764,25 +764,22 @@ const NarratorController = {
           });
         }
         
-        // Method 3: Preload and prepare actual audio files
+        // Method 3: Preload actual audio files (but don't play them)
         Object.values(this.audioFiles).forEach((audioPath, index) => {
           setTimeout(() => {
             const preloadAudio = new Audio(audioPath);
             preloadAudio.volume = 0;
-            preloadAudio.preload = 'auto';
+            preloadAudio.preload = 'metadata'; // Only preload metadata, not full file
             preloadAudio.load();
             
-            // Try a quick play/pause to further unlock
-            const playAttempt = preloadAudio.play();
-            if (playAttempt) {
-              playAttempt.then(() => {
-                preloadAudio.pause();
-                preloadAudio.currentTime = 0;
-                console.log(`Preloaded and unlocked: ${audioPath}`);
-              }).catch(() => {
-                console.log(`Preload play failed for: ${audioPath}`);
-              });
-            }
+            // Just load the file, don't try to play it yet
+            preloadAudio.addEventListener('loadedmetadata', () => {
+              console.log(`Preloaded metadata for: ${audioPath}`);
+            });
+            
+            preloadAudio.addEventListener('error', () => {
+              console.log(`Preload failed for: ${audioPath}`);
+            });
           }, index * 100); // Stagger the preloading
         });
         
@@ -843,10 +840,13 @@ const NarratorController = {
     if (this.isAutoPlay) {
       console.log(`Auto-play stopped: ${reason}`);
       this.isAutoPlay = false;
+      
+      // Always clear the timer when stopping autoplay
       if (this.autoPlayTimer) {
         clearTimeout(this.autoPlayTimer);
         this.autoPlayTimer = null;
       }
+      
       this.stopNarration();
       this.updateAutoPlayButton();
     }
@@ -864,10 +864,20 @@ const NarratorController = {
 
   onNarrationEnd() {
     // Only trigger auto-advance if we're actually in auto-play mode
-    if (this.isAutoPlay && !this.autoPlayTimer) {
+    if (this.isAutoPlay && !this.autoPlayTimer && this.currentNarrationSection >= 0) {
       console.log('Narration ended, scheduling auto-advance...');
+      
+      // Verify we're still on the section we finished narrating (avoid race conditions)
+      if (this.currentNarrationSection !== AnimationController.currentSection) {
+        console.log('Section changed during narration, skipping auto-advance');
+        return;
+      }
+      
       // Add a small pause before advancing to next section
       this.autoPlayTimer = setTimeout(() => {
+        // Clear the timer reference immediately to prevent double-execution
+        this.autoPlayTimer = null;
+        
         if (this.isAutoPlay) { // Double-check we're still in auto-play
           this.advanceToNextSection();
         }
@@ -884,29 +894,39 @@ const NarratorController = {
     const currentSection = AnimationController.currentSection;
     console.log(`Advancing from section ${currentSection}`);
     
-    if (currentSection < SECTION_DATA.length - 1) {
-      // Clear any existing timer
-      if (this.autoPlayTimer) {
-        clearTimeout(this.autoPlayTimer);
-        this.autoPlayTimer = null;
+    // Validate section boundaries
+    if (currentSection < 0 || currentSection >= SECTION_DATA.length - 1) {
+      if (currentSection >= SECTION_DATA.length - 1) {
+        // Reached the end, stop auto-play
+        console.log('Auto-play journey completed!');
+        this.stopAutoPlay('completed');
+      } else {
+        console.log('Invalid section for advance, stopping auto-play');
+        this.stopAutoPlay('invalid section');
       }
-      
-      // Move to next section
-      AnimationController.currentSection++;
-      NavigationController.showSectionAutoPlay(AnimationController.currentSection);
-      
-      // Wait for complete transition (1000ms transition + 500ms overlay fade + 100ms section visible delay + buffer)
-      setTimeout(() => {
-        if (this.isAutoPlay) { // Check we're still in auto-play mode
-          console.log(`Starting narration for section ${AnimationController.currentSection}`);
-          this.playCurrentSectionWithAutoAdvance();
-        }
-      }, 1800); // Extended delay to ensure transition is completely finished
-    } else {
-      // Reached the end, stop auto-play
-      console.log('Auto-play journey completed!');
-      this.stopAutoPlay('completed');
+      return;
     }
+    
+    // Clear any existing timer to prevent double-execution
+    if (this.autoPlayTimer) {
+      clearTimeout(this.autoPlayTimer);
+      this.autoPlayTimer = null;
+    }
+    
+    // Move to next section
+    AnimationController.currentSection++;
+    NavigationController.showSectionAutoPlay(AnimationController.currentSection);
+    
+    // Wait for complete transition (1000ms transition + 500ms overlay fade + 100ms section visible delay + buffer)
+    this.autoPlayTimer = setTimeout(() => {
+      // Clear timer reference
+      this.autoPlayTimer = null;
+      
+      if (this.isAutoPlay) { // Check we're still in auto-play mode
+        console.log(`Starting narration for section ${AnimationController.currentSection}`);
+        this.playCurrentSectionWithAutoAdvance();
+      }
+    }, 1800); // Extended delay to ensure transition is completely finished
   },
 
   updateAutoPlayButton() {
@@ -939,9 +959,12 @@ const NarratorController = {
     
     console.log(`Starting narration for section ${currentSection}, autoPlay: ${this.isAutoPlay}`);
     
+    // Stop any existing narration first
+    this.stopNarration();
+    
     // Prevent multiple narrations from starting
     if (this.isPlaying || this.isUsingTTS) {
-      console.log('Narration already playing, skipping...');
+      console.log('Narration already playing after stop attempt, skipping...');
       return;
     }
 
@@ -1016,14 +1039,21 @@ const NarratorController = {
     });
 
     this.currentAudio.addEventListener('stalled', () => {
-      console.log(`Audio stalled for section ${this.currentNarrationSection}, trying TTS fallback`);
+      console.log(`Audio stalled for section ${this.currentNarrationSection}, setting up TTS fallback timer`);
       // If audio stalls for too long, fallback to TTS
-      setTimeout(() => {
-        if (this.currentAudio && this.currentAudio.readyState < 2) {
-          console.log('Audio still not ready, falling back to TTS');
+      // But use a different timer to avoid conflicts with autoplay timer
+      const stallTimeout = setTimeout(() => {
+        if (this.currentAudio && this.currentAudio.readyState < 2 && !this.isPlaying && !this.isUsingTTS) {
+          console.log('Audio still not ready after stall, falling back to TTS');
+          this.currentAudio = null;
           this.fallbackToTTS();
         }
-      }, 3000); // 3 second timeout
+      }, 5000); // 5 second timeout
+      
+      // Clear the stall timeout if audio starts playing
+      this.currentAudio.addEventListener('play', () => {
+        clearTimeout(stallTimeout);
+      }, { once: true });
     });
 
     // Start playing with proper error handling
@@ -1057,20 +1087,11 @@ const NarratorController = {
   stopNarration() {
     console.log(`Stopping narration, autoPlay: ${this.isAutoPlay}, isPlaying: ${this.isPlaying}, isUsingTTS: ${this.isUsingTTS}`);
     
-    // Stop audio playback
-    if (this.currentAudio) {
-      this.currentAudio.pause();
-      this.currentAudio.currentTime = 0;
-      this.currentAudio = null;
-    }
+    // Stop all possible audio sources
+    this.stopAllAudio();
     
-    // Stop text-to-speech fallback
-    if (this.isUsingTTS) {
-      speechSynthesis.cancel();
-      this.isUsingTTS = false;
-    }
-    
-    // Clear auto-play timer only if we're not in auto-play mode (manual stop)
+    // Always clear timers when stopping narration manually
+    // But preserve autoPlayTimer if we're still in autoplay mode (let autoplay manage its own timer)
     if (this.autoPlayTimer && !this.isAutoPlay) {
       console.log('Clearing auto-play timer (manual stop)');
       clearTimeout(this.autoPlayTimer);
@@ -1078,8 +1099,53 @@ const NarratorController = {
     }
     
     this.isPlaying = false;
+    this.isUsingTTS = false;
     this.currentNarrationSection = -1; // Reset tracked section
     this.updateButtonState();
+  },
+
+  stopAllAudio() {
+    // Stop current audio if playing
+    if (this.currentAudio) {
+      try {
+        this.currentAudio.pause();
+        this.currentAudio.currentTime = 0;
+        this.currentAudio.src = ''; // Clear source to fully stop
+        this.currentAudio = null;
+      } catch (e) {
+        console.log('Error stopping current audio:', e);
+        this.currentAudio = null;
+      }
+    }
+    
+    // Stop all Audio elements on the page (in case multiple got created)
+    const allAudioElements = document.querySelectorAll('audio');
+    allAudioElements.forEach(audio => {
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.src = '';
+      } catch (e) {
+        console.log('Error stopping audio element:', e);
+      }
+    });
+    
+    // Stop text-to-speech
+    if (this.isUsingTTS || speechSynthesis.speaking) {
+      speechSynthesis.cancel();
+      this.isUsingTTS = false;
+    }
+    
+    // Reset audio context if needed
+    if (this.audioContext && this.audioContext.state === 'running') {
+      try {
+        // Don't suspend the context as that might break future audio
+        // Just ensure no audio is playing through it
+        console.log('AudioContext state reset');
+      } catch (e) {
+        console.log('Error with AudioContext:', e);
+      }
+    }
   },
 
   async attemptIOSAudioUnlock() {
@@ -1112,6 +1178,9 @@ const NarratorController = {
 
   retryAudioPlayback(audioPath) {
     console.log(`Retrying audio playback: ${audioPath}`);
+    
+    // Make sure we stop any existing audio first
+    this.stopAllAudio();
     
     // Create new audio instance
     this.currentAudio = new Audio(audioPath);
@@ -1170,9 +1239,15 @@ const NarratorController = {
 
   // Fallback to text-to-speech if audio files are not available
   fallbackToTTS() {
-    // Prevent multiple TTS instances
-    if (this.isUsingTTS) {
-      console.log('TTS already running, skipping...');
+    // Prevent multiple TTS instances and validate state
+    if (this.isUsingTTS || this.isPlaying) {
+      console.log('TTS already running or audio playing, skipping...');
+      return;
+    }
+    
+    // Validate we have a valid section
+    if (this.currentNarrationSection < 0 || this.currentNarrationSection >= SECTION_DATA.length) {
+      console.log('Invalid section for TTS, skipping...');
       return;
     }
     
@@ -1181,7 +1256,14 @@ const NarratorController = {
       speechSynthesis.cancel();
       
       const messagePanel = document.getElementById('message-panel');
-      if (!messagePanel || !messagePanel.textContent.trim()) return;
+      if (!messagePanel || !messagePanel.textContent.trim()) {
+        console.log('No text content found for TTS');
+        // If no content, still try to advance if in autoplay
+        if (this.isAutoPlay && !this.autoPlayTimer && this.currentNarrationSection === AnimationController.currentSection) {
+          this.onNarrationEnd();
+        }
+        return;
+      }
 
       const textToRead = messagePanel.textContent.replace(/\s+/g, ' ').trim();
       const utterance = new SpeechSynthesisUtterance(textToRead);
@@ -1211,15 +1293,27 @@ const NarratorController = {
         }
       };
 
-      utterance.onerror = () => {
-        console.error(`TTS error for section ${this.currentNarrationSection}`);
+      utterance.onerror = (event) => {
+        console.error(`TTS error for section ${this.currentNarrationSection}:`, event.error);
         this.isPlaying = false;
         this.isUsingTTS = false;
         this.updateButtonState();
+        
+        // If in autoplay mode and TTS fails, try to continue to next section
+        if (this.isAutoPlay && !this.autoPlayTimer && this.currentNarrationSection === AnimationController.currentSection) {
+          console.log('TTS failed, but attempting to continue autoplay to next section');
+          this.onNarrationEnd();
+        }
       };
 
       this.isUsingTTS = true; // Set flag before starting
       speechSynthesis.speak(utterance);
+    } else {
+      console.log('Speech synthesis not available');
+      // If speech synthesis not available and in autoplay, still try to advance
+      if (this.isAutoPlay && !this.autoPlayTimer && this.currentNarrationSection === AnimationController.currentSection) {
+        this.onNarrationEnd();
+      }
     }
   }
 };
