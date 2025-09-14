@@ -1043,17 +1043,28 @@ const NarratorController = {
       // If audio stalls for too long, fallback to TTS
       // But use a different timer to avoid conflicts with autoplay timer
       const stallTimeout = setTimeout(() => {
-        if (this.currentAudio && this.currentAudio.readyState < 2 && !this.isPlaying && !this.isUsingTTS) {
+        // More thorough checks before falling back to TTS
+        if (this.currentAudio && 
+            this.currentAudio.readyState < 2 && 
+            !this.isPlaying && 
+            !this.isUsingTTS &&
+            this.currentNarrationSection === AnimationController.currentSection) {
           console.log('Audio still not ready after stall, falling back to TTS');
+          // Clear the audio reference before starting TTS
+          this.currentAudio.src = '';
           this.currentAudio = null;
           this.fallbackToTTS();
         }
       }, 5000); // 5 second timeout
       
-      // Clear the stall timeout if audio starts playing
-      this.currentAudio.addEventListener('play', () => {
+      // Clear the stall timeout if audio starts playing or if we switch sections
+      const clearStallTimeout = () => {
         clearTimeout(stallTimeout);
-      }, { once: true });
+      };
+      
+      this.currentAudio.addEventListener('play', clearStallTimeout, { once: true });
+      this.currentAudio.addEventListener('canplaythrough', clearStallTimeout, { once: true });
+      this.currentAudio.addEventListener('error', clearStallTimeout, { once: true });
     });
 
     // Start playing with proper error handling
@@ -1065,7 +1076,12 @@ const NarratorController = {
       }).catch(error => {
         console.log(`Audio play failed for section ${currentSection}:`, error.name, error.message);
         this.isPlaying = false;
-        this.currentAudio = null;
+        
+        // Immediately clear the audio to prevent stall timeouts from triggering
+        if (this.currentAudio) {
+          this.currentAudio.src = '';
+          this.currentAudio = null;
+        }
         
         // Don't fallback to TTS immediately on iOS autoplay policy errors
         // Instead, try to play a user-initiated audio first
@@ -1075,10 +1091,16 @@ const NarratorController = {
             // Retry audio after unlock attempt
             this.retryAudioPlayback(audioPath);
           }).catch(() => {
-            this.fallbackToTTS();
+            // Only start TTS if we're still on the same section and not already playing something
+            if (this.currentNarrationSection === AnimationController.currentSection && !this.isPlaying && !this.isUsingTTS) {
+              this.fallbackToTTS();
+            }
           });
         } else {
-          this.fallbackToTTS();
+          // Only start TTS if we're still on the same section and not already playing something
+          if (this.currentNarrationSection === AnimationController.currentSection && !this.isPlaying && !this.isUsingTTS) {
+            this.fallbackToTTS();
+          }
         }
       });
     }
@@ -1182,6 +1204,12 @@ const NarratorController = {
     // Make sure we stop any existing audio first
     this.stopAllAudio();
     
+    // Double-check we should still be trying audio for this section
+    if (this.currentNarrationSection !== AnimationController.currentSection) {
+      console.log('Section changed during retry, aborting audio retry');
+      return;
+    }
+    
     // Create new audio instance
     this.currentAudio = new Audio(audioPath);
     this.currentAudio.volume = 0.8;
@@ -1207,8 +1235,15 @@ const NarratorController = {
     this.currentAudio.addEventListener('error', () => {
       console.log(`Retry audio failed, falling back to TTS`);
       this.isPlaying = false;
-      this.currentAudio = null;
-      this.fallbackToTTS();
+      // Clear the audio reference before falling back
+      if (this.currentAudio) {
+        this.currentAudio.src = '';
+        this.currentAudio = null;
+      }
+      // Only start TTS if we're still on the same section and not already using TTS
+      if (this.currentNarrationSection === AnimationController.currentSection && !this.isUsingTTS) {
+        this.fallbackToTTS();
+      }
     });
 
     // Attempt to play
@@ -1216,8 +1251,15 @@ const NarratorController = {
     if (playPromise) {
       playPromise.catch(() => {
         console.log('Retry audio play failed, using TTS');
-        this.currentAudio = null;
-        this.fallbackToTTS();
+        // Clear audio reference
+        if (this.currentAudio) {
+          this.currentAudio.src = '';
+          this.currentAudio = null;
+        }
+        // Only start TTS if we're still on the same section and not already using TTS
+        if (this.currentNarrationSection === AnimationController.currentSection && !this.isUsingTTS) {
+          this.fallbackToTTS();
+        }
       });
     }
   },
@@ -1245,10 +1287,30 @@ const NarratorController = {
       return;
     }
     
-    // Validate we have a valid section
-    if (this.currentNarrationSection < 0 || this.currentNarrationSection >= SECTION_DATA.length) {
-      console.log('Invalid section for TTS, skipping...');
+    // Validate we have a valid section and it hasn't changed
+    if (this.currentNarrationSection < 0 || 
+        this.currentNarrationSection >= SECTION_DATA.length ||
+        this.currentNarrationSection !== AnimationController.currentSection) {
+      console.log('Invalid section or section changed, skipping TTS...');
       return;
+    }
+    
+    // Final check - make sure no audio is currently playing
+    if (this.currentAudio && !this.currentAudio.paused) {
+      console.log('Audio is still playing, not starting TTS');
+      return;
+    }
+    
+    // Clear any remaining audio reference before starting TTS
+    if (this.currentAudio) {
+      try {
+        this.currentAudio.pause();
+        this.currentAudio.src = '';
+        this.currentAudio = null;
+      } catch (e) {
+        console.log('Error clearing audio before TTS:', e);
+        this.currentAudio = null;
+      }
     }
     
     if ('speechSynthesis' in window) {
