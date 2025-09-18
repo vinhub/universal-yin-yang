@@ -441,14 +441,8 @@ const AnimationController = {
 
 const NavigationController = {
   showSection(idx, withTransition = false) {
-    // Stop auto-play if this is a manual navigation (not from auto-play)
-    if (NarratorController.isAutoPlay && !this.isAutoPlayNavigation) {
-      console.log('Manual navigation detected, stopping auto-play...');
-      NarratorController.stopAutoPlay('manual navigation');
-    }
-    
-    // Only stop narration if not in auto-play mode (to prevent conflicts)
-    if (NarratorController.isPlaying && !NarratorController.isAutoPlay) {
+    // Stop narration when navigating to a new section
+    if (NarratorController.isPlaying) {
       NarratorController.stopNarration();
     }
     
@@ -457,16 +451,6 @@ const NavigationController = {
     } else {
       this.performSectionSwitch(idx);
     }
-  },
-
-  // Flag to indicate when navigation is triggered by auto-play
-  isAutoPlayNavigation: false,
-
-  // Method for auto-play to use when navigating
-  showSectionAutoPlay(idx) {
-    this.isAutoPlayNavigation = true;
-    this.showSection(idx, true);
-    this.isAutoPlayNavigation = false;
   },
 
   showTransitionAnimation(idx) {
@@ -579,9 +563,6 @@ const NavigationController = {
     
     // Setup swipe gestures
     this.initializeSwipeGestures();
-    
-    // Setup page refresh/unload detection
-    this.initializePageUnloadDetection();
   },
 
   initializeKeyboardNavigation() {
@@ -614,40 +595,6 @@ const NavigationController = {
           AnimationController.currentSection = SECTION_DATA.length - 1;
           this.showSection(SECTION_DATA.length - 1, true);
           break;
-      }
-    });
-  },
-
-  initializePageUnloadDetection() {
-    // Stop auto-play on page refresh/close
-    window.addEventListener('beforeunload', () => {
-      if (NarratorController.isAutoPlay) {
-        console.log('Page unloading, stopping auto-play...');
-        NarratorController.stopAutoPlay('page unload');
-      }
-    });
-    
-    // Stop auto-play if page becomes hidden (tab switch, minimize, etc.)
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden && NarratorController.isAutoPlay) {
-        console.log('Page hidden, stopping auto-play...');
-        NarratorController.stopAutoPlay('page hidden');
-      }
-    });
-    
-    // Stop auto-play on browser back/forward navigation
-    window.addEventListener('popstate', () => {
-      if (NarratorController.isAutoPlay) {
-        console.log('Browser navigation detected, stopping auto-play...');
-        NarratorController.stopAutoPlay('browser navigation');
-      }
-    });
-    
-    // Stop auto-play on focus loss (clicking outside, Alt+Tab, etc.)
-    window.addEventListener('blur', () => {
-      if (NarratorController.isAutoPlay) {
-        console.log('Window focus lost, stopping auto-play...');
-        NarratorController.stopAutoPlay('focus lost');
       }
     });
   },
@@ -703,8 +650,6 @@ const NarratorController = {
   currentAudio: null,
   isPlaying: false,
   isUsingTTS: false,
-  isAutoPlay: false,
-  autoPlayTimer: null,
   currentNarrationSection: -1, // Track which section is currently being narrated
   isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent),
   audioContext: null,
@@ -720,12 +665,12 @@ const NarratorController = {
   },
 
   initialize() {
-    const autoPlayButton = document.getElementById('autoplay-button');
-    if (autoPlayButton) {
-      autoPlayButton.addEventListener('click', () => this.toggleAutoPlay());
+    const playButton = document.getElementById('autoplay-button');
+    if (playButton) {
+      playButton.addEventListener('click', () => this.togglePlayPause());
     }
     
-    // Initialize audio context for iOS
+    // Simple iOS audio context initialization
     if (this.isIOS) {
       this.initializeIOSAudio();
     }
@@ -735,55 +680,22 @@ const NarratorController = {
   },
 
   initializeIOSAudio() {
-    // Create a more aggressive iOS audio unlock
+    // Simple iOS audio unlock on first user interaction
     const unlockAudio = () => {
       try {
-        // Method 1: AudioContext unlock
+        // Create AudioContext if needed
         if (!this.audioContext) {
           this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          
-          // Create and play a silent buffer to unlock audio
-          const buffer = this.audioContext.createBuffer(1, 1, 22050);
-          const source = this.audioContext.createBufferSource();
-          source.buffer = buffer;
-          source.connect(this.audioContext.destination);
-          source.start(0);
         }
         
-        // Method 2: Create multiple Audio elements and try to play them
-        for (let i = 0; i < 3; i++) {
-          const testAudio = new Audio();
-          testAudio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTuX5PLKdSEFJHfD8N2QQQoUXrTp66hVFApGn+DyvmwhBTuX5PLKdSEFJHfD8N2QQA==';
-          testAudio.volume = 0.001; // Very very quiet
-          testAudio.muted = true; // Start muted
-          testAudio.play().then(() => {
-            console.log(`iOS audio unlock ${i + 1} successful`);
-            testAudio.muted = false; // Unmute for future use
-          }).catch(() => {
-            console.log(`iOS audio unlock ${i + 1} failed`);
+        // Resume AudioContext if suspended
+        if (this.audioContext.state === 'suspended') {
+          this.audioContext.resume().then(() => {
+            console.log('iOS AudioContext resumed');
           });
         }
         
-        // Method 3: Preload actual audio files (but don't play them)
-        Object.values(this.audioFiles).forEach((audioPath, index) => {
-          setTimeout(() => {
-            const preloadAudio = new Audio(audioPath);
-            preloadAudio.volume = 0;
-            preloadAudio.preload = 'metadata'; // Only preload metadata, not full file
-            preloadAudio.load();
-            
-            // Just load the file, don't try to play it yet
-            preloadAudio.addEventListener('loadedmetadata', () => {
-              console.log(`Preloaded metadata for: ${audioPath}`);
-            });
-            
-            preloadAudio.addEventListener('error', () => {
-              console.log(`Preload failed for: ${audioPath}`);
-            });
-          }, index * 100); // Stagger the preloading
-        });
-        
-        console.log('iOS audio unlock attempted with multiple methods');
+        console.log('iOS audio unlocked on user interaction');
         
       } catch (e) {
         console.error('Error unlocking iOS audio:', e);
@@ -791,23 +703,12 @@ const NarratorController = {
       
       // Remove the event listeners after first interaction
       document.removeEventListener('touchstart', unlockAudio, true);
-      document.removeEventListener('touchend', unlockAudio, true);
       document.removeEventListener('click', unlockAudio, true);
     };
     
-    // Add event listeners for first user interaction with capture=true
+    // Add event listeners for first user interaction
     document.addEventListener('touchstart', unlockAudio, true);
-    document.addEventListener('touchend', unlockAudio, true);
     document.addEventListener('click', unlockAudio, true);
-    
-    // Also try to unlock on page load after a short delay
-    setTimeout(() => {
-      if (this.audioContext && this.audioContext.state === 'suspended') {
-        this.audioContext.resume().then(() => {
-          console.log('AudioContext resumed on iOS');
-        });
-      }
-    }, 1000);
   },
 
   preloadAudio() {
@@ -820,17 +721,17 @@ const NarratorController = {
     });
   },
 
-  toggleAutoPlay() {
-    if (this.isAutoPlay) {
-      this.stopAutoPlay();
+  togglePlayPause() {
+    if (this.isPlaying) {
+      this.stopNarration();
     } else {
-      this.startAutoPlay();
+      this.startNarration();
     }
   },
 
   startAutoPlay() {
     this.isAutoPlay = true;
-    this.updateAutoPlayButton();
+    this.updatePlayButton();
     
     // For iOS, do additional audio preparation when autoplay starts
     if (this.isIOS) {
@@ -860,7 +761,7 @@ const NarratorController = {
       }
       
       this.stopNarration();
-      this.updateAutoPlayButton();
+      this.updatePlayButton();
     }
   },
 
@@ -910,112 +811,25 @@ const NarratorController = {
     }
   },
 
-  advanceToNextSection() {
-    if (!this.isAutoPlay) {
-      console.log('Auto-advance cancelled - auto-play stopped');
-      return;
-    }
-    
-    const currentSection = AnimationController.currentSection;
-    console.log(`Advancing from section ${currentSection}`);
-    
-    // Validate section boundaries
-    if (currentSection < 0 || currentSection >= SECTION_DATA.length - 1) {
-      if (currentSection >= SECTION_DATA.length - 1) {
-        // Reached the end, stop auto-play
-        console.log('Auto-play journey completed!');
-        this.stopAutoPlay('completed');
-      } else {
-        console.log('Invalid section for advance, stopping auto-play');
-        this.stopAutoPlay('invalid section');
-      }
-      return;
-    }
-    
-    // For iOS: Stop narration and force a fresh start after transition
-    // This is more reliable than trying to preserve audio during DOM changes
-    console.log('Stopping current narration before section advance');
-    this.stopNarration();
-    
-    // Clear any existing timer to prevent double-execution
-    if (this.autoPlayTimer) {
-      clearTimeout(this.autoPlayTimer);
-      this.autoPlayTimer = null;
-    }
-    
-    // Move to next section
-    AnimationController.currentSection++;
-    NavigationController.showSectionAutoPlay(AnimationController.currentSection);
-    
-    // For iOS: Use minimal delay and aggressive audio restart
-    if (this.isIOS) {
-      // Use very short delay for iOS to minimize audio interruption time
-      this.autoPlayTimer = setTimeout(() => {
-        this.autoPlayTimer = null;
-        
-        if (this.isAutoPlay) {
-          console.log(`iOS: Immediate audio restart for section ${AnimationController.currentSection}`);
-          // Force immediate audio restart with user interaction check
-          this.forceIOSAudioRestart();
-        }
-      }, 200); // Very short delay for iOS
-    } else {
-      // Desktop: Use normal timing
-      this.autoPlayTimer = setTimeout(() => {
-        this.autoPlayTimer = null;
-        
-        if (this.isAutoPlay) {
-          console.log(`Starting narration for section ${AnimationController.currentSection}`);
-          this.playCurrentSectionWithAutoAdvance();
-        }
-      }, 1800);
-    }
-  },
-
-  // Force iOS audio restart with immediate attempts
-  forceIOSAudioRestart() {
-    console.log('iOS: Forcing audio restart after section transition');
-    
-    // Create a silent audio element to "unlock" audio if needed
-    const unlockAudio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTuX5PLKdSEFJHfD8N2QQQoUXrTp66hVFApGn+DyvmwhBTuX5PLKdSEFJHfD8N2QQA==');
-    unlockAudio.volume = 0.001;
-    
-    const playUnlock = unlockAudio.play();
-    if (playUnlock) {
-      playUnlock.then(() => {
-        console.log('iOS: Audio context unlocked, starting main audio');
-        unlockAudio.pause();
-        // Immediately try to start the actual audio
-        this.startIOSNarrationWithRetry(1, 5); // Use more attempts for transitions
-      }).catch(() => {
-        console.log('iOS: Audio unlock failed, trying main audio anyway');
-        this.startIOSNarrationWithRetry(1, 5);
-      });
-    } else {
-      // Fallback if play() doesn't return a promise
-      this.startIOSNarrationWithRetry(1, 5);
-    }
-  },
-
-  updateAutoPlayButton() {
-    const autoPlayButton = document.getElementById('autoplay-button');
-    if (autoPlayButton) {
-      const svg = autoPlayButton.querySelector('svg');
-      if (this.isAutoPlay) {
-        autoPlayButton.classList.add('active');
-        autoPlayButton.setAttribute('aria-label', 'Stop auto-play journey');
-        autoPlayButton.setAttribute('title', 'Stop automatic journey');
-        // Change icon to speaker with sound waves when playing
+  updatePlayButton() {
+    const playButton = document.getElementById('autoplay-button');
+    if (playButton) {
+      const svg = playButton.querySelector('svg');
+      if (this.isPlaying) {
+        playButton.classList.add('active');
+        playButton.setAttribute('aria-label', 'Pause narration');
+        playButton.setAttribute('title', 'Pause narration');
+        // Change icon to pause when playing
         if (svg) {
-          svg.innerHTML = '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" fill="currentColor"/>'; // Speaker with sound waves
+          svg.innerHTML = '<path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" fill="currentColor"/>'; // Pause icon
         }
       } else {
-        autoPlayButton.classList.remove('active');
-        autoPlayButton.setAttribute('aria-label', 'Start auto-play journey');
-        autoPlayButton.setAttribute('title', 'Start automatic journey');
-        // Change icon to muted speaker when stopped
+        playButton.classList.remove('active');
+        playButton.setAttribute('aria-label', 'Play narration');
+        playButton.setAttribute('title', 'Play narration');
+        // Change icon to speaker when stopped
         if (svg) {
-          svg.innerHTML = '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" fill="currentColor"/>'; // Muted speaker
+          svg.innerHTML = '<path d="M3 9v6h4l5 5V4l-5 5H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" fill="currentColor"/>'; // Speaker icon
         }
       }
     }
@@ -1025,32 +839,20 @@ const NarratorController = {
     const currentSection = AnimationController.currentSection;
     const audioPath = this.audioFiles[currentSection];
     
-    console.log(`Starting narration for section ${currentSection}, autoPlay: ${this.isAutoPlay}`);
+    console.log(`Starting narration for section ${currentSection}`);
     
-    // Stop any existing narration first
+    // ALWAYS stop any existing narration first and wait a moment for cleanup
     this.stopNarration();
     
-    // Add a small delay to ensure stopNarration has completed
+    // Give a small delay to ensure all audio is fully stopped
     setTimeout(() => {
-      // Re-check after the delay to prevent race conditions
-      if (this.isPlaying || this.isUsingTTS) {
-        console.log('Narration still playing after stop attempt, skipping...');
+      // Double-check that we're still on the same section after the delay
+      if (AnimationController.currentSection !== currentSection) {
+        console.log('Section changed during audio setup, aborting');
         return;
       }
-
-      // Additional check to ensure section is valid
-      if (currentSection < 0 || currentSection >= SECTION_DATA.length) {
-        console.log(`Invalid section ${currentSection}, skipping narration`);
-        return;
-      }
-
-      // Ensure we're still on the same section we intended to start
-      if (currentSection !== AnimationController.currentSection) {
-        console.log(`Section changed from ${currentSection} to ${AnimationController.currentSection}, aborting narration start`);
-        return;
-      }
-
-      // Store the section we're starting narration for to prevent race conditions
+      
+      // Store the section we're starting narration for
       this.currentNarrationSection = currentSection;
       
       // If no audio file exists, use TTS directly
@@ -1060,209 +862,144 @@ const NarratorController = {
         return;
       }
 
+      // Final check: ensure no audio is playing anywhere
+      const playingAudio = Array.from(document.querySelectorAll('audio')).find(audio => !audio.paused);
+      if (playingAudio) {
+        console.log('Found audio still playing, stopping it first');
+        playingAudio.pause();
+        playingAudio.currentTime = 0;
+        playingAudio.src = '';
+      }
+
       // Try audio file first
       this.currentAudio = new Audio(audioPath);
       
-      // Configure audio settings for better iOS compatibility
+      // Configure audio settings
       this.currentAudio.volume = 0.8;
       this.currentAudio.preload = 'auto';
-      this.currentAudio.crossOrigin = 'anonymous'; // Help with CORS issues
+      this.currentAudio.crossOrigin = 'anonymous';
       
-      // For iOS, try to load the audio more aggressively and handle suspended context
-      if (this.isIOS) {
-        // Check if audio context is suspended and try to resume it
-        if (this.audioContext && this.audioContext.state === 'suspended') {
-          console.log('iOS: AudioContext suspended, attempting to resume');
-          this.audioContext.resume().then(() => {
-            console.log('iOS: AudioContext resumed successfully');
-          }).catch((e) => {
-            console.log('iOS: AudioContext resume failed:', e);
-          });
-        }
-        
-        this.currentAudio.load(); // Force load on iOS
-        
-        // Add iOS-specific event to handle interruptions
-        this.currentAudio.addEventListener('pause', () => {
-          if (this.isAutoPlay && this.isPlaying && !this.currentAudio.ended) {
-            console.log('iOS: Audio paused unexpectedly, attempting to resume');
-            setTimeout(() => {
-              if (this.currentAudio && this.isAutoPlay) {
-                this.currentAudio.play().catch(e => {
-                  console.log('iOS: Resume failed, falling back to TTS');
-                  this.fallbackToTTS();
-                });
-              }
-            }, 100);
-          }
-        });
-      }
-
+      // Flag to prevent TTS fallback if audio actually starts
+      let audioStarted = false;
+      
       // Set up event listeners
-      this.currentAudio.addEventListener('loadstart', () => {
-        console.log(`Loading audio: ${audioPath}`);
-      });
-
-      this.currentAudio.addEventListener('canplaythrough', () => {
-        console.log(`Audio can play through: ${audioPath}`);
-      });
-
       this.currentAudio.addEventListener('play', () => {
         console.log(`Audio started playing for section ${this.currentNarrationSection}`);
+        audioStarted = true;
         this.isPlaying = true;
-        this.updateButtonState();
+        this.updatePlayButton();
       });
 
       this.currentAudio.addEventListener('ended', () => {
-        console.log(`Audio ended for section ${this.currentNarrationSection}, autoPlay: ${this.isAutoPlay}`);
+        console.log(`Audio ended for section ${this.currentNarrationSection}`);
         this.isPlaying = false;
-        this.updateButtonState();
-        // Only trigger auto-advance if in auto-play mode and no timer already set
-        // Also verify we're still on the same section we started narrating
-        if (this.isAutoPlay && !this.autoPlayTimer && this.currentNarrationSection === AnimationController.currentSection) {
-          this.onNarrationEnd();
+        this.updatePlayButton();
+        // Clean up the audio element when it ends
+        if (this.currentAudio) {
+          this.currentAudio.src = '';
+          this.currentAudio = null;
         }
       });
 
       this.currentAudio.addEventListener('error', (e) => {
         console.log(`Audio failed for section ${this.currentNarrationSection}:`, e);
-        console.log('Audio error details:', {
-          error: e.target?.error,
-          networkState: e.target?.networkState,
-          readyState: e.target?.readyState
-        });
         this.isPlaying = false;
-        this.updateButtonState();
+        this.updatePlayButton();
         this.currentAudio = null;
-        
-        // Fallback to text-to-speech if audio fails
-        this.fallbackToTTS();
+        // Only fallback to TTS if audio never started playing
+        if (!audioStarted) {
+          this.fallbackToTTS();
+        }
       });
 
-      this.currentAudio.addEventListener('stalled', () => {
-        console.log(`Audio stalled for section ${this.currentNarrationSection}, setting up TTS fallback timer`);
-        // If audio stalls for too long, fallback to TTS
-        // But use a different timer to avoid conflicts with autoplay timer
-        const stallTimeout = setTimeout(() => {
-          // More thorough checks before falling back to TTS
-          if (this.currentAudio && 
-              this.currentAudio.readyState < 2 && 
-              !this.isPlaying && 
-              !this.isUsingTTS &&
-              this.currentNarrationSection === AnimationController.currentSection) {
-            console.log('Audio still not ready after stall, falling back to TTS');
-            // Clear the audio reference before starting TTS
-            this.currentAudio.src = '';
+      // Start playing
+      const playPromise = this.currentAudio.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          console.log(`Audio play promise resolved for section ${this.currentNarrationSection}`);
+        }).catch(error => {
+          console.log(`Audio play failed:`, error.name);
+          // Give a small delay to check if audio actually started despite promise rejection
+          setTimeout(() => {
+            if (!audioStarted && this.currentAudio && this.currentAudio.paused) {
+              console.log('Audio definitely failed, falling back to TTS');
+              this.isPlaying = false;
+              this.currentAudio = null;
+              this.fallbackToTTS();
+            } else if (audioStarted) {
+              console.log('Audio promise rejected but audio is playing - continuing with audio');
+            }
+          }, 100);
+        });
+      } else {
+        // For very old browsers that don't return a promise
+        setTimeout(() => {
+          if (!audioStarted && this.currentAudio && this.currentAudio.paused) {
+            console.log('Audio failed to start, falling back to TTS');
+            this.isPlaying = false;
             this.currentAudio = null;
             this.fallbackToTTS();
           }
-        }, 5000); // 5 second timeout
-        
-        // Clear the stall timeout if audio starts playing or if we switch sections
-        const clearStallTimeout = () => {
-          clearTimeout(stallTimeout);
-        };
-        
-        this.currentAudio.addEventListener('play', clearStallTimeout, { once: true });
-        this.currentAudio.addEventListener('canplaythrough', clearStallTimeout, { once: true });
-        this.currentAudio.addEventListener('error', clearStallTimeout, { once: true });
-      });
-
-      // Start playing with proper error handling
-      const playPromise = this.currentAudio.play();
-      
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          console.log(`Audio play promise resolved for section ${currentSection}`);
-        }).catch(error => {
-          console.log(`Audio play failed for section ${currentSection}:`, error.name, error.message);
-          this.isPlaying = false;
-          
-          // Immediately clear the audio to prevent stall timeouts from triggering
-          if (this.currentAudio) {
-            this.currentAudio.src = '';
-            this.currentAudio = null;
-          }
-          
-          // Don't fallback to TTS immediately on iOS autoplay policy errors
-          // Instead, try to play a user-initiated audio first
-          if (this.isIOS && (error.name === 'NotAllowedError' || error.name === 'AbortError')) {
-            console.log('iOS autoplay blocked, attempting user interaction unlock');
-            this.attemptIOSAudioUnlock().then(() => {
-              // Retry audio after unlock attempt
-              this.retryAudioPlayback(audioPath);
-            }).catch(() => {
-              // Only start TTS if we're still on the same section and not already playing something
-              if (this.currentNarrationSection === AnimationController.currentSection && !this.isPlaying && !this.isUsingTTS) {
-                this.fallbackToTTS();
-              }
-            });
-          } else {
-            // Only start TTS if we're still on the same section and not already playing something
-            if (this.currentNarrationSection === AnimationController.currentSection && !this.isPlaying && !this.isUsingTTS) {
-              this.fallbackToTTS();
-            }
-          }
-        });
+        }, 200);
       }
-    }, 100); // 100ms delay to ensure clean state
+    }, 50); // Small delay to ensure cleanup is complete
   },
 
   stopNarration() {
-    console.log(`Stopping narration, autoPlay: ${this.isAutoPlay}, isPlaying: ${this.isPlaying}, isUsingTTS: ${this.isUsingTTS}`);
+    console.log(`Stopping narration, isPlaying: ${this.isPlaying}, isUsingTTS: ${this.isUsingTTS}`);
     
     // Stop all possible audio sources
     this.stopAllAudio();
     
-    // Always clear timers when stopping narration manually
-    // But preserve autoPlayTimer if we're still in autoplay mode (let autoplay manage its own timer)
-    if (this.autoPlayTimer && !this.isAutoPlay) {
-      console.log('Clearing auto-play timer (manual stop)');
-      clearTimeout(this.autoPlayTimer);
-      this.autoPlayTimer = null;
+    // Stop TTS if it's running
+    if (speechSynthesis.speaking) {
+      speechSynthesis.cancel();
     }
     
     this.isPlaying = false;
     this.isUsingTTS = false;
-    this.currentNarrationSection = -1; // Reset tracked section
-    this.updateButtonState();
-    
-    // For iOS, add extra delay to ensure everything stops
-    if (this.isIOS) {
-      setTimeout(() => {
-        // Double-check everything is stopped
-        if (speechSynthesis.speaking) {
-          speechSynthesis.cancel();
-        }
-        this.isPlaying = false;
-        this.isUsingTTS = false;
-      }, 50);
-    }
+    this.currentNarrationSection = -1;
+    this.updatePlayButton();
   },
 
   stopAllAudio() {
+    console.log('Stopping all audio sources...');
+    
     // Stop current audio if playing
     if (this.currentAudio) {
       try {
         this.currentAudio.pause();
         this.currentAudio.currentTime = 0;
         this.currentAudio.src = ''; // Clear source to fully stop
+        this.currentAudio.removeEventListener('play', () => {});
+        this.currentAudio.removeEventListener('ended', () => {});
+        this.currentAudio.removeEventListener('error', () => {});
         this.currentAudio = null;
+        console.log('Stopped and cleared currentAudio');
       } catch (e) {
         console.log('Error stopping current audio:', e);
         this.currentAudio = null;
       }
     }
     
-    // Stop all Audio elements on the page (in case multiple got created)
+    // Stop ALL Audio elements on the page aggressively
     const allAudioElements = document.querySelectorAll('audio');
-    allAudioElements.forEach(audio => {
+    console.log(`Found ${allAudioElements.length} audio elements to stop`);
+    allAudioElements.forEach((audio, index) => {
       try {
+        if (!audio.paused) {
+          console.log(`Stopping audio element ${index} that was playing`);
+        }
         audio.pause();
         audio.currentTime = 0;
         audio.src = '';
+        audio.load(); // Force reload to clear any cached state
+        // Remove the element entirely if it's not the current one
+        if (audio !== this.currentAudio) {
+          audio.remove();
+        }
       } catch (e) {
-        console.log('Error stopping audio element:', e);
+        console.log(`Error stopping audio element ${index}:`, e);
       }
     });
     
@@ -1270,6 +1007,7 @@ const NarratorController = {
     if (this.isUsingTTS || speechSynthesis.speaking) {
       speechSynthesis.cancel();
       this.isUsingTTS = false;
+      console.log('Stopped TTS');
     }
     
     // Reset audio context if needed
@@ -1563,17 +1301,24 @@ const NarratorController = {
       return;
     }
     
+    // Additional check: if audio is currently playing anywhere, don't start TTS
+    if (this.currentAudio && !this.currentAudio.paused) {
+      console.log('Audio is currently playing, not starting TTS');
+      return;
+    }
+    
+    // Check for any audio elements on the page that might be playing
+    const playingAudio = Array.from(document.querySelectorAll('audio')).some(audio => !audio.paused);
+    if (playingAudio) {
+      console.log('Found other audio playing, not starting TTS');
+      return;
+    }
+    
     // Validate we have a valid section and it hasn't changed
     if (this.currentNarrationSection < 0 || 
         this.currentNarrationSection >= SECTION_DATA.length ||
         this.currentNarrationSection !== AnimationController.currentSection) {
       console.log('Invalid section or section changed, skipping TTS...');
-      return;
-    }
-    
-    // Final check - make sure no audio is currently playing
-    if (this.currentAudio && !this.currentAudio.paused) {
-      console.log('Audio is still playing, not starting TTS');
       return;
     }
     
