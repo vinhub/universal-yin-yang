@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Generate Social Preview PNG</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        
+        #canvas {
+            border: 1px solid #ccc;
+            display: block;
+            margin: 20px auto;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #ff8c42;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background-color: #e07a35;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <h2>Social Media Preview Generator</h2>
+        <p>Click "Generate PNG" to create the social preview image, then right-click and "Save as" to download it as social-preview.png</p>
+        <button onclick="generatePreview()">Generate PNG</button>
+        <button onclick="downloadPNG()">Download PNG</button>
+    </div>
+    
+    <canvas id="canvas" width="1200" height="630"></canvas>
+    
+    <script>
+        function generatePreview() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Create gradient background
+            const gradient = ctx.createLinearGradient(0, 0, 1200, 630);
+            gradient.addColorStop(0, '#1a1a2e');
+            gradient.addColorStop(0.5, '#16213e');
+            gradient.addColorStop(1, '#0f3460');
+            
+            // Fill background
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 1200, 630);
+            
+            // Draw Yin-Yang symbol (step by step for visibility)
+            const centerX = 600;
+            const centerY = 315;
+            const radius = 150;
+            
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            
+            // Step 1: Fill entire circle with white background
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Step 2: Draw the black half (left side)
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, Math.PI/2, 3*Math.PI/2, false); // Left semicircle
+            ctx.fill();
+            
+            // Step 3: Draw the white small circle (top, cutting into black area)
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(0, -75, 75, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Step 4: Draw the black small circle (bottom, cutting into white area)
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(0, 75, 75, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Step 5: Draw outer circle border
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+            ctx.stroke();
+            
+            // Step 6: Draw Yang dot (black dot in white area) - FORCE VISIBLE
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(0, -75, 25, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Add a border to make the black dot more visible
+            ctx.strokeStyle = '#333333';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            // Step 7: Draw Yin dot (white dot in black area) - FORCE VISIBLE
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(0, 75, 25, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Add a border to make the white dot more visible
+            ctx.strokeStyle = '#cccccc';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            ctx.restore();
+            
+            // Draw title text
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.font = '300 48px Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('The Yin-Yang Model of Reality', 600, 100);
+            
+            // Draw subtitle
+            ctx.fillStyle = 'rgba(255, 140, 66, 0.8)';
+            ctx.font = '24px Arial, sans-serif';
+            ctx.fillText('An Interactive Journey Through Balance and Duality', 600, 140);
+            
+            // Draw bottom text
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.font = '18px Arial, sans-serif';
+            ctx.fillText('An Interactive Essay', 600, 580);
+        }
+        
+        function downloadPNG() {
+            const canvas = document.getElementById('canvas');
+            const link = document.createElement('a');
+            link.download = 'social-preview.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // Generate preview on page load
+        window.onload = function() {
+            generatePreview();
+        };
+    </script>
+</body>
+</html>

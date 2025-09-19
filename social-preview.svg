@@ -1,7 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Define the gradient properly -->
+    <linearGradient id="backgroundGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#16213e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f3460;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
   <!-- Background -->
-  <rect width="1200" height="630" fill="linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)"/>
+  <rect width="1200" height="630" fill="url(#backgroundGradient)"/>
   
   <!-- Main Yin-Yang Symbol -->
   <g transform="translate(600, 315)">
@@ -33,6 +42,6 @@
   
   <!-- Bottom text -->
   <text x="600" y="580" text-anchor="middle" fill="rgba(255, 255, 255, 0.6)" font-family="Arial, sans-serif" font-size="18">
-    Explore the fundamental principles of complementary opposites
+    An Interactive Essay
   </text>
 </svg>
