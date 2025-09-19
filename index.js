@@ -1,4 +1,13 @@
 // ============================
+// IMMEDIATE TTS CLEANUP
+// ============================
+
+// Immediately stop any ongoing TTS from previous page load
+if (typeof speechSynthesis !== 'undefined' && speechSynthesis.speaking) {
+  speechSynthesis.cancel();
+}
+
+// ============================
 // CONFIGURATION & DATA MODULE
 // ============================
 
@@ -442,7 +451,8 @@ const AnimationController = {
 const NavigationController = {
   showSection(idx, withTransition = false) {
     // Stop narration when navigating to a new section
-    if (NarratorController.isPlaying) {
+    if (NarratorController.isPlaying || NarratorController.isUsingTTS) {
+      console.log('Navigation: stopping narration before section change');
       NarratorController.stopNarration();
     }
     
@@ -648,6 +658,7 @@ const NavigationController = {
 
 const NarratorController = {
   currentAudio: null,
+  currentUtterance: null,
   isPlaying: false,
   isUsingTTS: false,
   currentNarrationSection: -1, // Track which section is currently being narrated
@@ -722,7 +733,8 @@ const NarratorController = {
   },
 
   togglePlayPause() {
-    if (this.isPlaying) {
+    // Check if ANY form of narration is active (audio OR TTS)
+    if (this.isPlaying || this.isUsingTTS) {
       this.stopNarration();
     } else {
       this.startNarration();
@@ -815,7 +827,10 @@ const NarratorController = {
     const playButton = document.getElementById('autoplay-button');
     if (playButton) {
       const svg = playButton.querySelector('svg');
-      if (this.isPlaying) {
+      // Consider both audio and TTS as "playing"
+      const isCurrentlyPlaying = this.isPlaying || this.isUsingTTS;
+      
+      if (isCurrentlyPlaying) {
         playButton.classList.add('active');
         playButton.setAttribute('aria-label', 'Pause narration');
         playButton.setAttribute('title', 'Pause narration');
@@ -839,8 +854,6 @@ const NarratorController = {
     const currentSection = AnimationController.currentSection;
     const audioPath = this.audioFiles[currentSection];
     
-    console.log(`Starting narration for section ${currentSection}`);
-    
     // ALWAYS stop any existing narration first and wait a moment for cleanup
     this.stopNarration();
     
@@ -848,7 +861,6 @@ const NarratorController = {
     setTimeout(() => {
       // Double-check that we're still on the same section after the delay
       if (AnimationController.currentSection !== currentSection) {
-        console.log('Section changed during audio setup, aborting');
         return;
       }
       
@@ -857,7 +869,6 @@ const NarratorController = {
       
       // If no audio file exists, use TTS directly
       if (!audioPath) {
-        console.log('No audio file found, using TTS');
         this.fallbackToTTS();
         return;
       }
@@ -865,7 +876,6 @@ const NarratorController = {
       // Final check: ensure no audio is playing anywhere
       const playingAudio = Array.from(document.querySelectorAll('audio')).find(audio => !audio.paused);
       if (playingAudio) {
-        console.log('Found audio still playing, stopping it first');
         playingAudio.pause();
         playingAudio.currentTime = 0;
         playingAudio.src = '';
@@ -879,19 +889,35 @@ const NarratorController = {
       this.currentAudio.preload = 'auto';
       this.currentAudio.crossOrigin = 'anonymous';
       
-      // Flag to prevent TTS fallback if audio actually starts
+      // Flag to prevent TTS fallback if audio actually starts AND plays successfully
       let audioStarted = false;
+      let audioPlaying = false;
       
       // Set up event listeners
       this.currentAudio.addEventListener('play', () => {
-        console.log(`Audio started playing for section ${this.currentNarrationSection}`);
         audioStarted = true;
+        // Don't set isPlaying yet - wait for actual audio data
+      });
+
+      this.currentAudio.addEventListener('loadstart', () => {
+        // Audio load started
+      });
+
+      this.currentAudio.addEventListener('loadeddata', () => {
+        if (audioStarted) {
+          audioPlaying = true;
+          this.isPlaying = true;
+          this.updatePlayButton();
+        }
+      });
+
+      this.currentAudio.addEventListener('playing', () => {
+        audioPlaying = true;
         this.isPlaying = true;
         this.updatePlayButton();
       });
 
       this.currentAudio.addEventListener('ended', () => {
-        console.log(`Audio ended for section ${this.currentNarrationSection}`);
         this.isPlaying = false;
         this.updatePlayButton();
         // Clean up the audio element when it ends
@@ -902,12 +928,11 @@ const NarratorController = {
       });
 
       this.currentAudio.addEventListener('error', (e) => {
-        console.log(`Audio failed for section ${this.currentNarrationSection}:`, e);
         this.isPlaying = false;
         this.updatePlayButton();
         this.currentAudio = null;
-        // Only fallback to TTS if audio never started playing
-        if (!audioStarted) {
+        // Only fallback to TTS if audio never actually started playing (not just the play event)
+        if (!audioPlaying) {
           this.fallbackToTTS();
         }
       });
@@ -916,44 +941,62 @@ const NarratorController = {
       const playPromise = this.currentAudio.play();
       if (playPromise !== undefined) {
         playPromise.then(() => {
-          console.log(`Audio play promise resolved for section ${this.currentNarrationSection}`);
+          // Audio play promise resolved
         }).catch(error => {
-          console.log(`Audio play failed:`, error.name);
           // Give a small delay to check if audio actually started despite promise rejection
           setTimeout(() => {
-            if (!audioStarted && this.currentAudio && this.currentAudio.paused) {
-              console.log('Audio definitely failed, falling back to TTS');
+            if (!audioPlaying && this.currentAudio && this.currentAudio.paused) {
               this.isPlaying = false;
               this.currentAudio = null;
               this.fallbackToTTS();
-            } else if (audioStarted) {
-              console.log('Audio promise rejected but audio is playing - continuing with audio');
+            } else if (audioPlaying) {
+              // Audio promise rejected but audio is playing - continue with audio
+            } else {
+              // Check one more time if audio is actually playing
+              if (this.currentAudio && this.currentAudio.currentTime > 0 && !this.currentAudio.paused) {
+                audioPlaying = true;
+                this.isPlaying = true;
+                this.updatePlayButton();
+              } else {
+                this.isPlaying = false;
+                this.currentAudio = null;
+                this.fallbackToTTS();
+              }
             }
-          }, 100);
+          }, 200); // Increased delay for better detection
         });
       } else {
         // For very old browsers that don't return a promise
         setTimeout(() => {
-          if (!audioStarted && this.currentAudio && this.currentAudio.paused) {
-            console.log('Audio failed to start, falling back to TTS');
+          if (!audioPlaying && this.currentAudio && this.currentAudio.paused) {
             this.isPlaying = false;
             this.currentAudio = null;
             this.fallbackToTTS();
           }
-        }, 200);
+        }, 300); // Increased delay for older browsers
       }
     }, 50); // Small delay to ensure cleanup is complete
   },
 
   stopNarration() {
-    console.log(`Stopping narration, isPlaying: ${this.isPlaying}, isUsingTTS: ${this.isUsingTTS}`);
-    
     // Stop all possible audio sources
     this.stopAllAudio();
     
-    // Stop TTS if it's running
-    if (speechSynthesis.speaking) {
+    // Force stop TTS immediately
+    if (this.isUsingTTS || speechSynthesis.speaking) {
       speechSynthesis.cancel();
+      
+      // Immediately update state
+      this.isPlaying = false;
+      this.isUsingTTS = false;
+      this.currentUtterance = null;
+      
+      // Double-check after a moment
+      setTimeout(() => {
+        if (speechSynthesis.speaking) {
+          speechSynthesis.cancel();
+        }
+      }, 50);
     }
     
     this.isPlaying = false;
@@ -1003,11 +1046,29 @@ const NarratorController = {
       }
     });
     
-    // Stop text-to-speech
+    // Stop text-to-speech with multiple methods
     if (this.isUsingTTS || speechSynthesis.speaking) {
+      console.log('Stopping TTS using multiple methods...');
+      
+      // Method 1: Standard cancel
       speechSynthesis.cancel();
+      
+      // Method 2: Pause first, then cancel (some browsers need this)
+      speechSynthesis.pause();
+      speechSynthesis.cancel();
+      
+      // Method 3: Clear the queue
+      if (speechSynthesis.pending) {
+        speechSynthesis.cancel();
+      }
+      
       this.isUsingTTS = false;
-      console.log('Stopped TTS');
+      console.log('TTS stop attempted with multiple methods');
+    }
+    
+    // Clear utterance reference
+    if (this.currentUtterance) {
+      this.currentUtterance = null;
     }
     
     // Reset audio context if needed
@@ -1278,39 +1339,15 @@ const NarratorController = {
     }
   },
 
-  updateButtonState() {
-    const narratorButton = document.getElementById('narrator-button');
-    if (narratorButton) {
-      if (this.isPlaying) {
-        narratorButton.classList.add('speaking');
-        narratorButton.setAttribute('aria-label', 'Stop audio');
-        narratorButton.setAttribute('title', 'Stop audio narration');
-      } else {
-        narratorButton.classList.remove('speaking');
-        narratorButton.setAttribute('aria-label', 'Play audio');
-        narratorButton.setAttribute('title', 'Play audio narration');
-      }
-    }
-  },
-
   // Fallback to text-to-speech if audio files are not available
   fallbackToTTS() {
-    // Prevent multiple TTS instances and validate state
-    if (this.isUsingTTS || this.isPlaying) {
-      console.log('TTS already running or audio playing, skipping...');
+    // Prevent multiple TTS instances
+    if (this.isUsingTTS) {
       return;
     }
     
-    // Additional check: if audio is currently playing anywhere, don't start TTS
-    if (this.currentAudio && !this.currentAudio.paused) {
-      console.log('Audio is currently playing, not starting TTS');
-      return;
-    }
-    
-    // Check for any audio elements on the page that might be playing
-    const playingAudio = Array.from(document.querySelectorAll('audio')).some(audio => !audio.paused);
-    if (playingAudio) {
-      console.log('Found other audio playing, not starting TTS');
+    // If audio is successfully playing, don't start TTS
+    if (this.isPlaying && this.currentAudio && !this.currentAudio.paused) {
       return;
     }
     
@@ -1318,7 +1355,6 @@ const NarratorController = {
     if (this.currentNarrationSection < 0 || 
         this.currentNarrationSection >= SECTION_DATA.length ||
         this.currentNarrationSection !== AnimationController.currentSection) {
-      console.log('Invalid section or section changed, skipping TTS...');
       return;
     }
     
@@ -1329,7 +1365,6 @@ const NarratorController = {
         this.currentAudio.src = '';
         this.currentAudio = null;
       } catch (e) {
-        console.log('Error clearing audio before TTS:', e);
         this.currentAudio = null;
       }
     }
@@ -1340,11 +1375,6 @@ const NarratorController = {
       
       const messagePanel = document.getElementById('message-panel');
       if (!messagePanel || !messagePanel.textContent.trim()) {
-        console.log('No text content found for TTS');
-        // If no content, still try to advance if in autoplay
-        if (this.isAutoPlay && !this.autoPlayTimer && this.currentNarrationSection === AnimationController.currentSection) {
-          this.onNarrationEnd();
-        }
         return;
       }
 
@@ -1355,48 +1385,84 @@ const NarratorController = {
       utterance.pitch = 1.1;
       utterance.volume = 0.8;
 
-      console.log(`Starting TTS for section ${this.currentNarrationSection}, autoPlay: ${this.isAutoPlay}`);
-
       utterance.onstart = () => {
-        console.log(`TTS started for section ${this.currentNarrationSection}`);
-        this.isPlaying = true;
-        this.isUsingTTS = true;
-        this.updateButtonState();
+        // Check if we've been cancelled already
+        if (this.isUsingTTS) {
+          this.isPlaying = true;
+          this.updatePlayButton();
+        } else {
+          speechSynthesis.cancel();
+        }
       };
 
       utterance.onend = () => {
-        console.log(`TTS ended for section ${this.currentNarrationSection}, autoPlay: ${this.isAutoPlay}`);
         this.isPlaying = false;
         this.isUsingTTS = false;
-        this.updateButtonState();
-        // Only trigger auto-advance if in auto-play mode and no timer already set
-        // Also verify we're still on the same section we started narrating
-        if (this.isAutoPlay && !this.autoPlayTimer && this.currentNarrationSection === AnimationController.currentSection) {
-          this.onNarrationEnd();
-        }
+        this.currentUtterance = null;
+        this.updatePlayButton();
+      };
+
+      utterance.onpause = () => {
+        this.isPlaying = false;
+        this.isUsingTTS = false;
+        this.currentUtterance = null;
+        this.updatePlayButton();
       };
 
       utterance.onerror = (event) => {
-        console.error(`TTS error for section ${this.currentNarrationSection}:`, event.error);
         this.isPlaying = false;
         this.isUsingTTS = false;
-        this.updateButtonState();
-        
-        // If in autoplay mode and TTS fails, try to continue to next section
-        if (this.isAutoPlay && !this.autoPlayTimer && this.currentNarrationSection === AnimationController.currentSection) {
-          console.log('TTS failed, but attempting to continue autoplay to next section');
-          this.onNarrationEnd();
-        }
+        this.currentUtterance = null;
+        this.updatePlayButton();
       };
 
+      // Store reference to current utterance for better control
+      this.currentUtterance = utterance;
       this.isUsingTTS = true; // Set flag before starting
+      this.isPlaying = true;  // Also set playing flag immediately
+      this.updatePlayButton(); // Update button to show pause state
+      
       speechSynthesis.speak(utterance);
-    } else {
-      console.log('Speech synthesis not available');
-      // If speech synthesis not available and in autoplay, still try to advance
-      if (this.isAutoPlay && !this.autoPlayTimer && this.currentNarrationSection === AnimationController.currentSection) {
-        this.onNarrationEnd();
-      }
+    }
+  },
+
+  // Cleanup method to stop any ongoing TTS on page load/refresh
+  cleanupOnPageLoad() {
+    // Aggressively stop any ongoing speech synthesis
+    try {
+      speechSynthesis.cancel();
+      
+      // Wait a moment and try again if still speaking
+      setTimeout(() => {
+        if (speechSynthesis.speaking || speechSynthesis.pending) {
+          speechSynthesis.cancel();
+          
+          // Final attempt after another short delay
+          setTimeout(() => {
+            if (speechSynthesis.speaking || speechSynthesis.pending) {
+              speechSynthesis.cancel();
+            }
+          }, 100);
+        }
+      }, 50);
+    } catch (error) {
+      // Silently handle any cleanup errors
+    }
+    
+    // Reset all TTS-related state
+    this.isUsingTTS = false;
+    this.currentUtterance = null;
+    this.isPlaying = false;
+    this.currentNarrationSection = -1;
+    
+    // Ensure button shows correct state
+    this.updatePlayButton();
+  },
+
+  // Additional cleanup for when page is about to unload
+  cleanupOnUnload() {
+    if (speechSynthesis.speaking) {
+      speechSynthesis.cancel();
     }
   }
 };
@@ -1478,6 +1544,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const pageLoadOverlay = document.getElementById('page-load-overlay');
   const firstSection = document.getElementById('section-0');
   
+  // Clean up any ongoing TTS from previous session
+  NarratorController.cleanupOnPageLoad();
+  
   // Initialize the transition Yin-Yangs
   initializeTransitionYinYangs();
   
@@ -1494,4 +1563,19 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }, 500);
   }, 2500);
+});
+
+// Clean up TTS when page is about to unload
+window.addEventListener('beforeunload', () => {
+  NarratorController.cleanupOnUnload();
+});
+
+// Additional cleanup when page becomes visible (handles tab switching)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    // Quick check and cleanup when tab becomes visible
+    if (speechSynthesis.speaking && !NarratorController.isUsingTTS) {
+      speechSynthesis.cancel();
+    }
+  }
 });
