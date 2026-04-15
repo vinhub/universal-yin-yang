@@ -500,8 +500,8 @@ const NavigationController = {
       // Hide transition overlay after section is loaded
       setTimeout(() => {
         overlay.classList.remove('active');
-      }, 500);
-    }, 1000);
+      }, 250);
+    }, 500);
   },
 
   performSectionSwitch(idx) {
@@ -1576,8 +1576,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (firstSection) {
         firstSection.classList.add('visible');
       }
-    }, 500);
-  }, 2500);
+    }, 250);
+  }, 1250);
 });
 
 // Clean up TTS when page is about to unload
