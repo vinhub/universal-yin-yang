@@ -40,16 +40,27 @@ const SECTION_DATA = [
     canvasId: 'canvas-classic',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white'),
     title: '1. Introduction',
-    type: 'static',
-    message: "Life appears to be full of opposites, such as day and night, joy and sorrow, work and rest, giving and receiving. " +
+    type: 'image',
+    message: "Life appears to be full of opposites, such as day and night, joy and sorrow, giving and receiving, work and rest. " +
              "But if you look closely, you'll find that such pairs are actually complementary and interdependent. " +
-             "The ancient Chinese principle of Yin-Yang represents this idea with two interlocked shapes that make a whole. " +
+             "The ancient Chinese principle of Yin-Yang represent this idea extremely well. " +
              "Let us dig deeper into this fascinating concept."
+  },
+  {
+    canvasId: 'canvas-basics',
+    draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white'),
+    title: '2. Basics of YinYang',
+    type: 'static',
+    message: "The Yin-Yang symbol is made of two interlocking teardrop shapes, one dark and one light, that form a perfect circle. " +
+             "Each half flows into the other, with no sharp boundary between them. " +
+             "Many phenomena, forces, qualities, or states you encounter in life have this relationship. " +
+             "So the symbol provides an intuitive representation that applies to many parts of reality."
+             
   },
   {
     canvasId: 'canvas-seeds',
     draw: (blend, r1, r2, ctx, rad, colorA, colorB, time) => YinYangDrawer.drawPulsatingDots(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white', time),
-    title: '2. Seeds of each other',
+    title: '3. Seeds of each other',
     type: 'pulsating',
     message: "Look at the two small circles within the yin-yang symbol. " +
              "They represent the profound truth that each side contains a 'seed' of its opposite. " +
@@ -60,7 +71,7 @@ const SECTION_DATA = [
   {
     canvasId: 'canvas-dynamic',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: '3. Yin-Yangs are dynamic',
+    title: '4. Yin-Yangs are dynamic',
     type: 'animated',
     message: "The two forces are constantly pushing against each other, taking turns leading or following. " +
              "This process can be frustrating if one takes a narrow, one-sided perspective. " +
@@ -71,7 +82,7 @@ const SECTION_DATA = [
   {
     canvasId: 'canvas-cycles',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: '4. Each cycle is different',
+    title: '5. Each cycle is different',
     type: 'complex',
     message: "Look closely: The pulsating cycles are constantly changing in length or intensity. " +
              "For example, some winters are brief, others stretch longer than expected. " +
@@ -82,7 +93,7 @@ const SECTION_DATA = [
   {
     canvasId: 'canvas-political',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'red', 'blue'),
-    title: '5. Politics: A perfect example',
+    title: '6. Politics: A perfect example',
     type: 'complex',
     message: "The Yin-Yang model applies extremely well to politics. " +
              "Opposing political movements might seem like enemies, " +
@@ -94,7 +105,7 @@ const SECTION_DATA = [
   {
     canvasId: 'canvas-fractal',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: '6. Yin-Yangs are fractal',
+    title: '7. Yin-Yangs are fractal',
     type: 'fractal',
     message: "You may find Yin-Yang patterns coexisting at multiple levels. " +
              "For example, the same political ideas may be locked in Yin-Yang dances at the national, state, and local levels. " +
@@ -104,7 +115,7 @@ const SECTION_DATA = [
   {
     canvasId: 'canvas-everywhere',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: '7. Yin-Yangs are everywhere',
+    title: '8. Yin-Yangs are everywhere',
     type: 'composite',
     message: "The Yin-Yang is one of life's most profound and persistent patterns. " +
              "They're everywhere: in relationships, in nature, in your daily rhythms, even in your own thoughts and emotions. " +
@@ -113,7 +124,7 @@ const SECTION_DATA = [
   {
     canvasId: 'canvas-conclusion',
     draw: (blend, r1, r2, ctx, rad, colorA, colorB, time) => YinYangDrawer.drawRotating(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white', time),
-    title: '8. The eternal dance',
+    title: '9. The eternal dance',
     type: 'rotating',
     message: "The dance continues, reminding us that all of life is movement, change, and balance. " +
              "In every moment, forces are shifting, perspectives are evolving, and new harmonies are being found. " +
@@ -397,8 +408,12 @@ const AnimationController = {
     let minFactor = ANIMATION_CONFIG.minFactor;
     let radiusFactor = 0;
 
+    if (section.type === 'image') {
+      return;
+    }
+
     const { ctx, yinYangRadius } = AnimationUtils.setupCanvas(canvas);
-    
+
     if (section.type === 'static') {
       section.draw(0.5, yinYangRadius * 0.75, yinYangRadius * 0.25, ctx, yinYangRadius);
       return;
@@ -665,14 +680,14 @@ const NarratorController = {
   isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent),
   audioContext: null,
   audioFiles: {
-    0: 'audio/section-1.mp3', // Classic Yin-Yang
-    1: 'audio/section-2.mp3', // Seeds of each other
-    2: 'audio/section-3.mp3', // Dynamic Yin-Yang
-    3: 'audio/section-4.mp3', // Cycles
-    4: 'audio/section-5.mp3', // Politics
-    5: 'audio/section-6.mp3', // Fractal
-    6: 'audio/section-7.mp3', // Everywhere
-    7: 'audio/section-8.mp3'  // The eternal dance
+    0: 'audio/section-1.mp3', // Introduction
+    2: 'audio/section-2.mp3', // Seeds of each other
+    3: 'audio/section-3.mp3', // Dynamic Yin-Yang
+    4: 'audio/section-4.mp3', // Cycles
+    5: 'audio/section-5.mp3', // Politics
+    6: 'audio/section-6.mp3', // Fractal
+    7: 'audio/section-7.mp3', // Everywhere
+    8: 'audio/section-8.mp3'  // The eternal dance
   },
 
   initialize() {

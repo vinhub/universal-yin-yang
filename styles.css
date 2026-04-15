@@ -136,6 +136,25 @@ canvas {
   border-radius: 12px;
 }
 
+/* Introduction image replacing the yin-yang canvas */
+#canvas-classic {
+  width: 65vmin;
+  height: 65vmin;
+  margin: 0 20px;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3),
+              0 2px 16px rgba(255, 184, 133, 0.15);
+  order: 2;
+  transition: all 0.3s ease;
+}
+
 /* Carousel indicators */
 #carousel-indicators {
   display: flex;
