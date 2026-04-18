@@ -91,9 +91,16 @@ const SECTION_DATA = [
              "It keeps life interesting and teaches us to stay flexible, present, and open to whatever comes next."
   },
   {
+    canvasId: 'canvas-scientific',
+    draw: (_blend, _r1, _r2, ctx, rad) => YinYangDrawer.drawBasic(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white'),
+    title: '6. Scientific Basis',
+    type: 'static',
+    message: "Yin-Yang is an ancient principle, but it is possible to provide a scientific justification for it: Any system that persists far from thermodynamic equilibrium, everything from a living cell to the global economic system, requires both the dissipation of energy and the constraints that channel that dissipation into functional structure. Remove either pole and the system collapses: pure dissipation dissolves into equilibrium, pure constraint freezes into stasis. This same pattern recurs across independent frameworks, suggesting it's a general feature of persistent complex systems."
+  },
+  {
     canvasId: 'canvas-political',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'red', 'blue'),
-    title: '6. Politics: A perfect example',
+    title: '7. Politics: A perfect example',
     type: 'complex',
     message: "The Yin-Yang model applies extremely well to politics. " +
              "Opposing political movements might seem like enemies, " +
@@ -105,7 +112,7 @@ const SECTION_DATA = [
   {
     canvasId: 'canvas-fractal',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: '7. Yin-Yangs are fractal',
+    title: '8. Yin-Yangs are fractal',
     type: 'fractal',
     message: "You may find Yin-Yang patterns coexisting at multiple levels. " +
              "For example, the same political ideas may be locked in Yin-Yang dances at the national, state, and local levels. " +
@@ -115,7 +122,7 @@ const SECTION_DATA = [
   {
     canvasId: 'canvas-everywhere',
     draw: (blend, r1, r2, ctx, rad) => YinYangDrawer.drawBasic(blend, r1, r2, ctx, rad, 'black', 'white'),
-    title: '8. Yin-Yangs are everywhere',
+    title: '9. Yin-Yangs are everywhere',
     type: 'composite',
     message: "The Yin-Yang is one of life's most profound and persistent patterns. " +
              "They're everywhere: in relationships, in nature, in your daily rhythms, even in your own thoughts and emotions. " +
@@ -124,7 +131,7 @@ const SECTION_DATA = [
   {
     canvasId: 'canvas-conclusion',
     draw: (blend, r1, r2, ctx, rad, colorA, colorB, time) => YinYangDrawer.drawRotating(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white', time),
-    title: '9. The eternal dance',
+    title: '10. The eternal dance',
     type: 'rotating',
     message: "The dance continues, reminding us that all of life is movement, change, and balance. " +
              "In every moment, forces are shifting, perspectives are evolving, and new harmonies are being found. " +
@@ -684,10 +691,10 @@ const NarratorController = {
     2: 'audio/section-2.mp3', // Seeds of each other
     3: 'audio/section-3.mp3', // Dynamic Yin-Yang
     4: 'audio/section-4.mp3', // Cycles
-    5: 'audio/section-5.mp3', // Politics
-    6: 'audio/section-6.mp3', // Fractal
-    7: 'audio/section-7.mp3', // Everywhere
-    8: 'audio/section-8.mp3'  // The eternal dance
+    6: 'audio/section-5.mp3', // Politics
+    7: 'audio/section-6.mp3', // Fractal
+    8: 'audio/section-7.mp3', // Everywhere
+    9: 'audio/section-8.mp3'  // The eternal dance
   },
 
   initialize() {
