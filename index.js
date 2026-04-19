@@ -94,8 +94,13 @@ const SECTION_DATA = [
     canvasId: 'canvas-scientific',
     draw: (_blend, _r1, _r2, ctx, rad) => YinYangDrawer.drawBasic(0.5, rad * 0.5, rad * 0.5, ctx, rad, 'black', 'white'),
     title: '6. Scientific Basis',
-    type: 'static',
-    message: "Yin-Yang is an ancient principle, but it is possible to provide a scientific justification for it: Any system that persists far from thermodynamic equilibrium, everything from a living cell to the global economic system, requires both the dissipation of energy and the constraints that channel that dissipation into functional structure. Remove either pole and the system collapses: pure dissipation dissolves into equilibrium, pure constraint freezes into stasis. This same pattern recurs across independent frameworks, suggesting it's a general feature of persistent complex systems."
+    type: 'image',
+    message: "Yin-Yang is an ancient principle, but it is possible to provide a scientific justification for it: " +
+             "Any system that persists far from thermodynamic equilibrium, everything from a living cell to " +
+             "the global economic system, requires both the dissipation of energy and the constraints that channel " +
+             "that dissipation into functional structure. Remove either pole and the system collapses: " +
+             "pure dissipation dissolves into equilibrium, pure constraint freezes into stasis. This same pattern recurs " +
+             "across varied contexts, suggesting it's a general feature of persistent complex systems."
   },
   {
     canvasId: 'canvas-political',

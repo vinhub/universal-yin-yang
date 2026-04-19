@@ -136,8 +136,9 @@ canvas {
   border-radius: 12px;
 }
 
-/* Introduction image replacing the yin-yang canvas */
-#canvas-classic {
+/* Section images replacing the yin-yang canvas */
+#canvas-classic,
+#canvas-scientific {
   width: 65vmin;
   height: 65vmin;
   margin: 0 20px;
